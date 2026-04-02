@@ -1,0 +1,71 @@
+name: Deploy Frontend to Azure Static Web Apps
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "frontend/**"
+      - ".github/workflows/deploy-frontend.yml"
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+    branches: [main]
+  workflow_dispatch:  # 手動実行も可能
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy (React + Vite)
+    runs-on: ubuntu-latest
+    # PR クローズ時はスキップ（Azure SWA が自動でプレビュー環境を削除する）
+    if: github.event_name != 'pull_request' || github.event.action != 'closed'
+
+    steps:
+      # ── 1. コードチェックアウト ──────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+
+      # ── 2. Node.js セットアップ ──────────────────────────
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: frontend/package-lock.json
+
+      # ── 3. 依存パッケージインストール ────────────────────
+      - name: Install dependencies
+        working-directory: frontend
+        run: npm ci
+
+      # ── 4. Vite ビルド ──────────────────────────────────
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          # バックエンド URL は GitHub Secrets から注入
+          VITE_API_BASE_URL: ${{ secrets.VITE_API_BASE_URL }}
+        run: npm run build
+
+      # ── 5. Azure Static Web Apps へデプロイ ──────────────
+      - name: Deploy to Azure Static Web Apps
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          action: "upload"
+          app_location: "frontend"
+          output_location: "dist"
+          skip_app_build: true  # ステップ4でビルド済み
+
+  # PR クローズ時のプレビュー環境削除
+  close-preview:
+    name: Close Pull Request Preview
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+
+    steps:
+      - name: Close Azure Static Web Apps Preview
+        uses: Azure/static-web-apps-deploy@v1
+        with:
+          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
+          action: "close"

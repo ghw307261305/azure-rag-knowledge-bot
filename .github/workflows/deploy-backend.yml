@@ -1,0 +1,70 @@
+name: Deploy Backend to Azure App Service
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend/**"
+      - ".github/workflows/deploy-backend.yml"
+  workflow_dispatch:  # 手動実行も可能
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy (FastAPI)
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. コードチェックアウト ──────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Python セットアップ ───────────────────────────
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+
+      # ── 3. 依存パッケージインストール ────────────────────
+      - name: Install dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      # ── 4. テスト実行 ────────────────────────────────────
+      - name: Run tests
+        working-directory: backend
+        env:
+          APP_ENV: test
+          AZURE_OPENAI_ENDPOINT: ""
+          AZURE_OPENAI_API_KEY: ""
+          AZURE_OPENAI_CHAT_DEPLOYMENT: ""
+          AZURE_OPENAI_EMBEDDING_DEPLOYMENT: ""
+          AZURE_SEARCH_ENDPOINT: ""
+          AZURE_SEARCH_API_KEY: ""
+          AZURE_SEARCH_INDEX_NAME: knowledge-index
+        run: |
+          pytest tests/ -v --tb=short
+
+      # ── 5. デプロイパッケージ作成 ─────────────────────────
+      - name: Create deployment zip
+        working-directory: backend
+        run: |
+          zip -r ../backend-deploy.zip . \
+            --exclude "*.pyc" \
+            --exclude "__pycache__/*" \
+            --exclude ".venv/*" \
+            --exclude ".pytest_cache/*" \
+            --exclude "tests/*" \
+            --exclude ".env"
+
+      # ── 6. Azure App Service へデプロイ ──────────────────
+      - name: Deploy to Azure App Service
+        uses: azure/webapps-deploy@v3
+        with:
+          app-name: ${{ secrets.AZURE_WEBAPP_NAME }}
+          publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
+          package: backend-deploy.zip
