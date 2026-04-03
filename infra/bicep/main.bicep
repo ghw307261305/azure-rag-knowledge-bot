@@ -1,17 +1,20 @@
 // Azure RAG Knowledge Bot infrastructure
 // Deploys:
-// - Linux App Service Plan
+// - Shared Linux App Service Plan
 // - Linux App Service for the FastAPI backend
-// - Azure Static Web Apps for the React frontend
+// - Linux App Service for the React frontend
 
-@description('Primary location for the resource group scoped resources.')
-param location string = resourceGroup().location
+@description('Primary location for the resource group scoped resources. Defaults to Japan East.')
+param location string = 'japaneast'
 
 @description('Logical application name used when explicit resource names are not supplied.')
 param appName string = 'rag-demo-dev'
 
 @description('Python runtime version for the backend app.')
 param pythonVersion string = '3.11'
+
+@description('Node.js runtime version for the frontend app.')
+param nodeVersion string = '20-lts'
 
 @description('Azure OpenAI endpoint.')
 param azureOpenAiEndpoint string
@@ -45,8 +48,8 @@ param appServicePlanName string = ''
 @description('Optional explicit backend App Service name.')
 param backendAppName string = ''
 
-@description('Optional explicit Static Web App name.')
-param staticWebAppName string = ''
+@description('Optional explicit frontend App Service name.')
+param frontendAppName string = ''
 
 @allowed([
   'F1'
@@ -54,19 +57,15 @@ param staticWebAppName string = ''
   'B2'
   'B3'
 ])
-@description('App Service Plan SKU. Use B1 or above when the subscription has no Free VM quota in the target region.')
-param appServicePlanSkuName string = 'B1'
+@description('App Service Plan SKU. Defaults to the Free tier (F1) for the Linux backend.')
+param appServicePlanSkuName string = 'F1'
 
-@description('Location for the Static Web App. Keep this aligned with the existing resource location when redeploying the same name.')
-param staticWebAppLocation string = 'eastasia'
-
-@description('Set to false when you want to deploy only the backend or reuse an existing Static Web App.')
-param deployStaticWebApp bool = true
+@description('Set to false when you want to deploy only the backend or reuse an existing frontend app.')
+param deployFrontendApp bool = true
 
 var resolvedAppServicePlanName = empty(appServicePlanName) ? 'asp-${appName}' : appServicePlanName
 var resolvedBackendAppName = empty(backendAppName) ? 'app-${appName}-backend' : backendAppName
-var resolvedStaticWebAppName = empty(staticWebAppName) ? 'swa-${appName}-frontend' : staticWebAppName
-var corsOrigins = empty(frontendUrl) ? '*' : frontendUrl
+var resolvedFrontendAppName = empty(frontendAppName) ? 'app-${appName}-frontend' : frontendAppName
 var appServicePlanSkuTier = {
   F1: 'Free'
   B1: 'Basic'
@@ -74,6 +73,7 @@ var appServicePlanSkuTier = {
   B3: 'Basic'
 }[appServicePlanSkuName]
 var enableAlwaysOn = appServicePlanSkuName != 'F1'
+var resolvedFrontendOrigin = !empty(frontendUrl) ? frontendUrl : (deployFrontendApp ? 'https://${frontendApp!.properties.defaultHostName}' : '*')
 
 resource appServicePlan 'Microsoft.Web/serverfarms@2023-12-01' = {
   name: resolvedAppServicePlanName
@@ -113,7 +113,7 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
         { name: 'AZURE_SEARCH_INDEX_NAME', value: azureSearchIndexName }
         { name: 'TOP_K', value: '5' }
         { name: 'MAX_CHUNKS', value: '5' }
-        { name: 'CORS_ORIGIN', value: corsOrigins }
+        { name: 'CORS_ORIGIN', value: resolvedFrontendOrigin }
         { name: 'SCM_DO_BUILD_DURING_DEPLOYMENT', value: 'true' }
         { name: 'WEBSITE_RUN_FROM_PACKAGE', value: '1' }
       ]
@@ -121,23 +121,30 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
   }
 }
 
-resource staticWebApp 'Microsoft.Web/staticSites@2023-12-01' = if (deployStaticWebApp) {
-  name: resolvedStaticWebAppName
-  location: staticWebAppLocation
-  sku: {
-    name: 'Free'
-    tier: 'Free'
-  }
+resource frontendApp 'Microsoft.Web/sites@2023-12-01' = if (deployFrontendApp) {
+  name: resolvedFrontendAppName
+  location: location
+  kind: 'app,linux'
   properties: {
-    buildProperties: {
-      appLocation: 'frontend'
-      outputLocation: 'dist'
+    serverFarmId: appServicePlan.id
+    httpsOnly: true
+    siteConfig: {
+      linuxFxVersion: 'NODE|${nodeVersion}'
+      appCommandLine: 'pm2 serve /home/site/wwwroot 8080 --no-daemon --spa'
+      alwaysOn: enableAlwaysOn
+      ftpsState: 'Disabled'
+      minTlsVersion: '1.2'
+      appSettings: [
+        { name: 'NODE_ENV', value: 'production' }
+        { name: 'SCM_DO_BUILD_DURING_DEPLOYMENT', value: 'false' }
+        { name: 'WEBSITE_RUN_FROM_PACKAGE', value: '1' }
+      ]
     }
   }
 }
 
 output backendUrl string = 'https://${appService.properties.defaultHostName}'
-output frontendUrl string = deployStaticWebApp ? 'https://${staticWebApp!.properties.defaultHostname}' : ''
+output frontendUrl string = deployFrontendApp ? 'https://${frontendApp!.properties.defaultHostName}' : ''
 output appServicePlanName string = resolvedAppServicePlanName
 output backendAppName string = resolvedBackendAppName
-output frontendAppName string = deployStaticWebApp ? resolvedStaticWebAppName : ''
+output frontendAppName string = deployFrontendApp ? resolvedFrontendAppName : ''

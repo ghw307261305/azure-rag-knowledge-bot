@@ -1,6 +1,6 @@
 import { KeyboardEvent, useEffect, useRef, useState } from "react";
 
-import { sendQuestion } from "./api";
+import { ApiError, sendQuestion } from "./api";
 import type { Message } from "./types";
 
 // ── 会話セッション型 ────────────────────────────────────────
@@ -89,6 +89,42 @@ function formatDate(isoString: string): string {
   return d.toLocaleDateString("ja-JP", { month: "short", day: "numeric" });
 }
 
+function generateId(): string {
+  const cryptoApi = globalThis.crypto;
+  if (cryptoApi?.randomUUID) {
+    return cryptoApi.randomUUID();
+  }
+
+  if (cryptoApi?.getRandomValues) {
+    const bytes = new Uint8Array(16);
+    cryptoApi.getRandomValues(bytes);
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0"));
+    return [
+      hex.slice(0, 4).join(""),
+      hex.slice(4, 6).join(""),
+      hex.slice(6, 8).join(""),
+      hex.slice(8, 10).join(""),
+      hex.slice(10, 16).join("")
+    ].join("-");
+  }
+
+  return `id-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+}
+
+function getDisplayError(error: unknown): string {
+  if (error instanceof ApiError) {
+    return error.message;
+  }
+
+  if (error instanceof Error && error.message.trim()) {
+    return error.message;
+  }
+
+  return "サーバーへの接続に失敗しました。しばらくしてから再度お試しください。";
+}
+
 export default function App() {
   const [conversations, setConversations] = useState<Conversation[]>(loadConversations);
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
@@ -124,7 +160,7 @@ export default function App() {
     try {
       const res = await sendQuestion(q);
       const newMsg = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         question: q,
         answer: res.answer,
         citations: res.citations,
@@ -154,7 +190,7 @@ export default function App() {
           return updated;
         });
       } else {
-        const newId = crypto.randomUUID();
+        const newId = generateId();
         activeConvIdRef.current = newId;
         setActiveConvId(newId);
         setConversations((prev) => {
@@ -166,8 +202,8 @@ export default function App() {
           return updated;
         });
       }
-    } catch {
-      setError("サーバーへの接続に失敗しました。しばらくしてから再度お試しください。");
+    } catch (error) {
+      setError(getDisplayError(error));
     } finally {
       setLoading(false);
     }
@@ -414,7 +450,10 @@ export default function App() {
                 ref={textareaRef}
                 rows={1}
                 value={question}
-                onChange={(e) => setQuestion(e.target.value)}
+                onChange={(e) => {
+                  setQuestion(e.target.value);
+                  if (error) setError("");
+                }}
                 onKeyDown={handleKeyDown}
                 placeholder="メッセージを入力…（Enter で送信）"
                 disabled={loading}

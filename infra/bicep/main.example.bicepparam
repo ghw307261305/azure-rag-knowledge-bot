@@ -6,19 +6,14 @@ param location = 'japaneast'
 // Logical app name used for default resource names.
 param appName = 'rag-demo-dev'
 
-// Free App Service plans often fail with "Free VMs quota = 0".
-param appServicePlanSkuName = 'B1'
+// Default to the free App Service plan in Japan East.
+param appServicePlanSkuName = 'F1'
 
-// If the Static Web App already exists, keep its original region here.
-// If you want a brand new frontend resource, change the name below as well.
-param staticWebAppLocation = 'eastasia'
+// Deploy the frontend into the same Japan East App Service plan.
+param deployFrontendApp = true
 
-// Deploy backend first. Switch to true only after deciding whether to reuse
-// the existing Static Web App in eastasia or create a new unique one.
-param deployStaticWebApp = false
-
-// Set this to an existing Static Web App name in eastasia, or a new unique name.
-param staticWebAppName = 'swa-rag-demo-dev-frontend'
+// Set a unique frontend web app name if the default name is already in use.
+param frontendAppName = 'app-rag-demo-dev-frontend'
 
 // Fill in your actual Azure resource values before deployment.
 param azureOpenAiEndpoint = 'https://<your-openai-resource>.openai.azure.com/'

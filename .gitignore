@@ -9,6 +9,8 @@ __pycache__/
 .env.local
 .env.production
 backend/.env
+infra/bicep/*.local.bicepparam
+infra/*.pem
 
 # Node / フロントエンド
 node_modules/
