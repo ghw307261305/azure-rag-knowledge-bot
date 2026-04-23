@@ -1,0 +1,6 @@
+date,region,product,quantity,unit_price
+2026-04-01,Tokyo,Azure Functions,3,18.5
+2026-04-02,Osaka,Azure AI Search,1,125.0
+2026-04-03,Tokyo,Blob Storage,8,2.4
+2026-04-04,Nagoya,Azure Functions,5,18.5
+2026-04-05,Osaka,Blob Storage,12,2.4

@@ -8,6 +8,11 @@ __pycache__/
 .env
 .env.local
 .env.production
+local.settings.json
+AzuriteConfig
+__azurite_db_*.json
+__azurite_db_*_extent__.json
+__blobstorage__/
 backend/.env
 infra/bicep/*.local.bicepparam
 infra/*.pem
