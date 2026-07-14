@@ -1,0 +1,3466 @@
+{
+  "generated_at": "2026-07-13T10:06:13.925362+00:00",
+  "configuration": {
+    "knowledge_dir": "C:\\rigelsoft\\workspace\\azure-rag-knowledge-bot\\docs\\knowledge-finance",
+    "chunk_count": 87,
+    "min_score": 0.06,
+    "top_k": 5
+  },
+  "summary": {
+    "total_cases": 60,
+    "answerable_cases": 49,
+    "unanswerable_cases": 11,
+    "passed_cases": 60,
+    "case_pass_rate": 1.0,
+    "hit_at_1": 0.897959,
+    "hit_at_3": 1.0,
+    "hit_at_5": 1.0,
+    "mrr_at_5": 0.9489795918367347,
+    "fallback_accuracy": 1.0,
+    "answerability_accuracy": 1.0,
+    "keyword_coverage": 1.0,
+    "average_latency_ms": 0.79,
+    "p95_latency_ms": 1.061
+  },
+  "categories": {
+    "account": {
+      "cases": 3,
+      "passed": 3,
+      "pass_rate": 1.0
+    },
+    "aml": {
+      "cases": 4,
+      "passed": 4,
+      "pass_rate": 1.0
+    },
+    "bcp": {
+      "cases": 2,
+      "passed": 2,
+      "pass_rate": 1.0
+    },
+    "complaint": {
+      "cases": 2,
+      "passed": 2,
+      "pass_rate": 1.0
+    },
+    "credit_risk": {
+      "cases": 3,
+      "passed": 3,
+      "pass_rate": 1.0
+    },
+    "cybersecurity": {
+      "cases": 2,
+      "passed": 2,
+      "pass_rate": 1.0
+    },
+    "data_protection": {
+      "cases": 3,
+      "passed": 3,
+      "pass_rate": 1.0
+    },
+    "delinquency": {
+      "cases": 3,
+      "passed": 3,
+      "pass_rate": 1.0
+    },
+    "fraud": {
+      "cases": 3,
+      "passed": 3,
+      "pass_rate": 1.0
+    },
+    "governance": {
+      "cases": 1,
+      "passed": 1,
+      "pass_rate": 1.0
+    },
+    "kyc": {
+      "cases": 3,
+      "passed": 3,
+      "pass_rate": 1.0
+    },
+    "legacy_recruitment": {
+      "cases": 2,
+      "passed": 2,
+      "pass_rate": 1.0
+    },
+    "loan_underwriting": {
+      "cases": 4,
+      "passed": 4,
+      "pass_rate": 1.0
+    },
+    "product_suitability": {
+      "cases": 3,
+      "passed": 3,
+      "pass_rate": 1.0
+    },
+    "regulatory_change": {
+      "cases": 3,
+      "passed": 3,
+      "pass_rate": 1.0
+    },
+    "suspicious_transaction": {
+      "cases": 3,
+      "passed": 3,
+      "pass_rate": 1.0
+    },
+    "transfer": {
+      "cases": 4,
+      "passed": 4,
+      "pass_rate": 1.0
+    },
+    "transfer_refund": {
+      "cases": 3,
+      "passed": 3,
+      "pass_rate": 1.0
+    },
+    "unanswerable_advice": {
+      "cases": 1,
+      "passed": 1,
+      "pass_rate": 1.0
+    },
+    "unanswerable_insurance": {
+      "cases": 1,
+      "passed": 1,
+      "pass_rate": 1.0
+    },
+    "unanswerable_market": {
+      "cases": 2,
+      "passed": 2,
+      "pass_rate": 1.0
+    },
+    "unanswerable_other": {
+      "cases": 2,
+      "passed": 2,
+      "pass_rate": 1.0
+    },
+    "unanswerable_pension": {
+      "cases": 1,
+      "passed": 1,
+      "pass_rate": 1.0
+    },
+    "unanswerable_product": {
+      "cases": 1,
+      "passed": 1,
+      "pass_rate": 1.0
+    },
+    "unanswerable_tax": {
+      "cases": 1,
+      "passed": 1,
+      "pass_rate": 1.0
+    }
+  },
+  "cases": [
+    {
+      "id": "FIN-001",
+      "category": "kyc",
+      "question": "本人確認書類の住所と申込住所が異なる場合はどうしますか",
+      "answerable": true,
+      "expected_sources": [
+        "01-customer-onboarding-kyc.md"
+      ],
+      "expected_keywords": [
+        "補完資料",
+        "保留"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.519917,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 1.276,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "01-customer-onboarding-kyc.md",
+          "section": "FAQ",
+          "chunk_id": "01-customer-onboarding-kyc-005",
+          "score": 0.519917
+        },
+        {
+          "rank": 2,
+          "source": "01-customer-onboarding-kyc.md",
+          "section": "個人顧客の確認項目",
+          "chunk_id": "01-customer-onboarding-kyc-001",
+          "score": 0.153585
+        },
+        {
+          "rank": 3,
+          "source": "01-customer-onboarding-kyc.md",
+          "section": "業務フロー",
+          "chunk_id": "01-customer-onboarding-kyc-003",
+          "score": 0.084392
+        },
+        {
+          "rank": 4,
+          "source": "01-customer-onboarding-kyc.md",
+          "section": "目的",
+          "chunk_id": "01-customer-onboarding-kyc-000",
+          "score": 0.080821
+        },
+        {
+          "rank": 5,
+          "source": "08-loan-application-and-underwriting.md",
+          "section": "確認項目",
+          "chunk_id": "08-loan-application-and-underwriting-001",
+          "score": 0.075751
+        }
+      ]
+    },
+    {
+      "id": "FIN-002",
+      "category": "kyc",
+      "question": "法人顧客のオンボーディングでは誰を確認しますか",
+      "answerable": true,
+      "expected_sources": [
+        "01-customer-onboarding-kyc.md"
+      ],
+      "expected_keywords": [
+        "実質的支配者",
+        "代表者"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.430361,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 1.132,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "01-customer-onboarding-kyc.md",
+          "section": "法人顧客の確認項目",
+          "chunk_id": "01-customer-onboarding-kyc-002",
+          "score": 0.430361
+        },
+        {
+          "rank": 2,
+          "source": "01-customer-onboarding-kyc.md",
+          "section": "個人顧客の確認項目",
+          "chunk_id": "01-customer-onboarding-kyc-001",
+          "score": 0.357283
+        },
+        {
+          "rank": 3,
+          "source": "01-customer-onboarding-kyc.md",
+          "section": "目的",
+          "chunk_id": "01-customer-onboarding-kyc-000",
+          "score": 0.349737
+        },
+        {
+          "rank": 4,
+          "source": "01-customer-onboarding-kyc.md",
+          "section": "FAQ",
+          "chunk_id": "01-customer-onboarding-kyc-005",
+          "score": 0.344446
+        },
+        {
+          "rank": 5,
+          "source": "01-customer-onboarding-kyc.md",
+          "section": "注意事項",
+          "chunk_id": "01-customer-onboarding-kyc-004",
+          "score": 0.291296
+        }
+      ]
+    },
+    {
+      "id": "FIN-003",
+      "category": "kyc",
+      "question": "高リスク顧客は自動的に口座開設を拒否しますか",
+      "answerable": true,
+      "expected_sources": [
+        "01-customer-onboarding-kyc.md"
+      ],
+      "expected_keywords": [
+        "自動拒否してはいけません",
+        "追加確認"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.150265,
+      "expected_rank": 2,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.822,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "02-account-opening-and-restrictions.md",
+          "section": "口座開設条件",
+          "chunk_id": "02-account-opening-and-restrictions-000",
+          "score": 0.150265
+        },
+        {
+          "rank": 2,
+          "source": "01-customer-onboarding-kyc.md",
+          "section": "注意事項",
+          "chunk_id": "01-customer-onboarding-kyc-004",
+          "score": 0.115934
+        },
+        {
+          "rank": 3,
+          "source": "10-credit-risk-management.md",
+          "section": "目的",
+          "chunk_id": "10-credit-risk-management-000",
+          "score": 0.066052
+        },
+        {
+          "rank": 4,
+          "source": "08-loan-application-and-underwriting.md",
+          "section": "FAQ",
+          "chunk_id": "08-loan-application-and-underwriting-004",
+          "score": 0.051227
+        },
+        {
+          "rank": 5,
+          "source": "10-credit-risk-management.md",
+          "section": "FAQ",
+          "chunk_id": "10-credit-risk-management-004",
+          "score": 0.050783
+        }
+      ]
+    },
+    {
+      "id": "FIN-004",
+      "category": "account",
+      "question": "本人確認中の口座で振込機能を利用できますか",
+      "answerable": true,
+      "expected_sources": [
+        "02-account-opening-and-restrictions.md"
+      ],
+      "expected_keywords": [
+        "PENDING_KYC",
+        "できません"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.166612,
+      "expected_rank": 2,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 1.209,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "01-customer-onboarding-kyc.md",
+          "section": "注意事項",
+          "chunk_id": "01-customer-onboarding-kyc-004",
+          "score": 0.166612
+        },
+        {
+          "rank": 2,
+          "source": "02-account-opening-and-restrictions.md",
+          "section": "FAQ",
+          "chunk_id": "02-account-opening-and-restrictions-004",
+          "score": 0.155217
+        },
+        {
+          "rank": 3,
+          "source": "02-account-opening-and-restrictions.md",
+          "section": "口座開設条件",
+          "chunk_id": "02-account-opening-and-restrictions-000",
+          "score": 0.108172
+        },
+        {
+          "rank": 4,
+          "source": "01-customer-onboarding-kyc.md",
+          "section": "目的",
+          "chunk_id": "01-customer-onboarding-kyc-000",
+          "score": 0.105451
+        },
+        {
+          "rank": 5,
+          "source": "01-customer-onboarding-kyc.md",
+          "section": "個人顧客の確認項目",
+          "chunk_id": "01-customer-onboarding-kyc-001",
+          "score": 0.093466
+        }
+      ]
+    },
+    {
+      "id": "FIN-005",
+      "category": "account",
+      "question": "RESTRICTED の口座状態は何を意味しますか",
+      "answerable": true,
+      "expected_sources": [
+        "02-account-opening-and-restrictions.md"
+      ],
+      "expected_keywords": [
+        "一部取引",
+        "制限"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.20583,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.997,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "02-account-opening-and-restrictions.md",
+          "section": "口座ステータス",
+          "chunk_id": "02-account-opening-and-restrictions-001",
+          "score": 0.20583
+        },
+        {
+          "rank": 2,
+          "source": "03-domestic-transfer-operations.md",
+          "section": "処理ステータス",
+          "chunk_id": "03-domestic-transfer-operations-002",
+          "score": 0.073706
+        },
+        {
+          "rank": 3,
+          "source": "03-domestic-transfer-operations.md",
+          "section": "FAQ",
+          "chunk_id": "03-domestic-transfer-operations-004",
+          "score": 0.057598
+        },
+        {
+          "rank": 4,
+          "source": "04-transfer-error-and-refund.md",
+          "section": "対応フロー",
+          "chunk_id": "04-transfer-error-and-refund-001",
+          "score": 0.036417
+        },
+        {
+          "rank": 5,
+          "source": "02-account-opening-and-restrictions.md",
+          "section": "口座開設条件",
+          "chunk_id": "02-account-opening-and-restrictions-000",
+          "score": 0.029708
+        }
+      ]
+    },
+    {
+      "id": "FIN-006",
+      "category": "account",
+      "question": "預金口座を解約する前に何を確認しますか",
+      "answerable": true,
+      "expected_sources": [
+        "02-account-opening-and-restrictions.md"
+      ],
+      "expected_keywords": [
+        "未処理取引",
+        "残高"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.170085,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.746,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "02-account-opening-and-restrictions.md",
+          "section": "解約手順",
+          "chunk_id": "02-account-opening-and-restrictions-003",
+          "score": 0.170085
+        },
+        {
+          "rank": 2,
+          "source": "02-account-opening-and-restrictions.md",
+          "section": "FAQ",
+          "chunk_id": "02-account-opening-and-restrictions-004",
+          "score": 0.137023
+        },
+        {
+          "rank": 3,
+          "source": "02-account-opening-and-restrictions.md",
+          "section": "口座ステータス",
+          "chunk_id": "02-account-opening-and-restrictions-001",
+          "score": 0.134149
+        },
+        {
+          "rank": 4,
+          "source": "02-account-opening-and-restrictions.md",
+          "section": "口座開設条件",
+          "chunk_id": "02-account-opening-and-restrictions-000",
+          "score": 0.127853
+        },
+        {
+          "rank": 5,
+          "source": "02-account-opening-and-restrictions.md",
+          "section": "利用制限の原則",
+          "chunk_id": "02-account-opening-and-restrictions-002",
+          "score": 0.119127
+        }
+      ]
+    },
+    {
+      "id": "FIN-007",
+      "category": "transfer",
+      "question": "振込はいつまで取り消せますか",
+      "answerable": true,
+      "expected_sources": [
+        "03-domestic-transfer-operations.md"
+      ],
+      "expected_keywords": [
+        "RECEIVED",
+        "組戻し"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.336788,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.532,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "03-domestic-transfer-operations.md",
+          "section": "FAQ",
+          "chunk_id": "03-domestic-transfer-operations-004",
+          "score": 0.336788
+        },
+        {
+          "rank": 2,
+          "source": "04-transfer-error-and-refund.md",
+          "section": "受付条件",
+          "chunk_id": "04-transfer-error-and-refund-000",
+          "score": 0.045366
+        },
+        {
+          "rank": 3,
+          "source": "04-transfer-error-and-refund.md",
+          "section": "禁止事項",
+          "chunk_id": "04-transfer-error-and-refund-002",
+          "score": 0.043756
+        },
+        {
+          "rank": 4,
+          "source": "03-domestic-transfer-operations.md",
+          "section": "目的",
+          "chunk_id": "03-domestic-transfer-operations-000",
+          "score": 0.029933
+        },
+        {
+          "rank": 5,
+          "source": "04-transfer-error-and-refund.md",
+          "section": "FAQ",
+          "chunk_id": "04-transfer-error-and-refund-004",
+          "score": 0.026226
+        }
+      ]
+    },
+    {
+      "id": "FIN-008",
+      "category": "transfer",
+      "question": "同一の振込依頼を再送した場合、二重処理をどう防ぎますか",
+      "answerable": true,
+      "expected_sources": [
+        "03-domestic-transfer-operations.md"
+      ],
+      "expected_keywords": [
+        "同一依頼 ID",
+        "一度だけ"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.123873,
+      "expected_rank": 2,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.794,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "14-business-continuity.md",
+          "section": "FAQ",
+          "chunk_id": "14-business-continuity-004",
+          "score": 0.123873
+        },
+        {
+          "rank": 2,
+          "source": "03-domestic-transfer-operations.md",
+          "section": "業務ルール",
+          "chunk_id": "03-domestic-transfer-operations-003",
+          "score": 0.075939
+        },
+        {
+          "rank": 3,
+          "source": "04-transfer-error-and-refund.md",
+          "section": "二重引落しの疑い",
+          "chunk_id": "04-transfer-error-and-refund-003",
+          "score": 0.05794
+        },
+        {
+          "rank": 4,
+          "source": "11-personal-data-and-records.md",
+          "section": "インシデント対応",
+          "chunk_id": "11-personal-data-and-records-003",
+          "score": 0.051449
+        },
+        {
+          "rank": 5,
+          "source": "04-transfer-error-and-refund.md",
+          "section": "対応フロー",
+          "chunk_id": "04-transfer-error-and-refund-001",
+          "score": 0.042317
+        }
+      ]
+    },
+    {
+      "id": "FIN-009",
+      "category": "transfer",
+      "question": "初めての振込先や通常と異なる端末ではどう対応しますか",
+      "answerable": true,
+      "expected_sources": [
+        "03-domestic-transfer-operations.md"
+      ],
+      "expected_keywords": [
+        "追加確認",
+        "初回振込先"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.145273,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.817,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "03-domestic-transfer-operations.md",
+          "section": "業務ルール",
+          "chunk_id": "03-domestic-transfer-operations-003",
+          "score": 0.145273
+        },
+        {
+          "rank": 2,
+          "source": "07-fraud-and-account-takeover.md",
+          "section": "主な兆候",
+          "chunk_id": "07-fraud-and-account-takeover-000",
+          "score": 0.107235
+        },
+        {
+          "rank": 3,
+          "source": "01-customer-onboarding-kyc.md",
+          "section": "FAQ",
+          "chunk_id": "01-customer-onboarding-kyc-005",
+          "score": 0.060015
+        },
+        {
+          "rank": 4,
+          "source": "04-transfer-error-and-refund.md",
+          "section": "受付条件",
+          "chunk_id": "04-transfer-error-and-refund-000",
+          "score": 0.046348
+        },
+        {
+          "rank": 5,
+          "source": "04-transfer-error-and-refund.md",
+          "section": "FAQ",
+          "chunk_id": "04-transfer-error-and-refund-004",
+          "score": 0.042706
+        }
+      ]
+    },
+    {
+      "id": "FIN-010",
+      "category": "transfer",
+      "question": "ACCEPTED になった振込を利用者操作で取り消せますか",
+      "answerable": true,
+      "expected_sources": [
+        "03-domestic-transfer-operations.md"
+      ],
+      "expected_keywords": [
+        "実行確定",
+        "取消不可"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.208455,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.826,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "03-domestic-transfer-operations.md",
+          "section": "FAQ",
+          "chunk_id": "03-domestic-transfer-operations-004",
+          "score": 0.208455
+        },
+        {
+          "rank": 2,
+          "source": "03-domestic-transfer-operations.md",
+          "section": "処理ステータス",
+          "chunk_id": "03-domestic-transfer-operations-002",
+          "score": 0.203311
+        },
+        {
+          "rank": 3,
+          "source": "04-transfer-error-and-refund.md",
+          "section": "対応フロー",
+          "chunk_id": "04-transfer-error-and-refund-001",
+          "score": 0.125787
+        },
+        {
+          "rank": 4,
+          "source": "02-account-opening-and-restrictions.md",
+          "section": "口座ステータス",
+          "chunk_id": "02-account-opening-and-restrictions-001",
+          "score": 0.043884
+        },
+        {
+          "rank": 5,
+          "source": "03-domestic-transfer-operations.md",
+          "section": "目的",
+          "chunk_id": "03-domestic-transfer-operations-000",
+          "score": 0.040452
+        }
+      ]
+    },
+    {
+      "id": "FIN-011",
+      "category": "transfer_refund",
+      "question": "実行済みの誤振込を組戻しする手順は何ですか",
+      "answerable": true,
+      "expected_sources": [
+        "04-transfer-error-and-refund.md"
+      ],
+      "expected_keywords": [
+        "組戻し案件",
+        "受取金融機関"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.338395,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.699,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "04-transfer-error-and-refund.md",
+          "section": "対応フロー",
+          "chunk_id": "04-transfer-error-and-refund-001",
+          "score": 0.338395
+        },
+        {
+          "rank": 2,
+          "source": "04-transfer-error-and-refund.md",
+          "section": "FAQ",
+          "chunk_id": "04-transfer-error-and-refund-004",
+          "score": 0.165382
+        },
+        {
+          "rank": 3,
+          "source": "04-transfer-error-and-refund.md",
+          "section": "受付条件",
+          "chunk_id": "04-transfer-error-and-refund-000",
+          "score": 0.157975
+        },
+        {
+          "rank": 4,
+          "source": "04-transfer-error-and-refund.md",
+          "section": "禁止事項",
+          "chunk_id": "04-transfer-error-and-refund-002",
+          "score": 0.154095
+        },
+        {
+          "rank": 5,
+          "source": "04-transfer-error-and-refund.md",
+          "section": "二重引落しの疑い",
+          "chunk_id": "04-transfer-error-and-refund-003",
+          "score": 0.138742
+        }
+      ]
+    },
+    {
+      "id": "FIN-012",
+      "category": "transfer_refund",
+      "question": "誤振込の返金を顧客に確約してよいですか",
+      "answerable": true,
+      "expected_sources": [
+        "04-transfer-error-and-refund.md"
+      ],
+      "expected_keywords": [
+        "返金を確約",
+        "禁止事項"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.201488,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.672,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "04-transfer-error-and-refund.md",
+          "section": "禁止事項",
+          "chunk_id": "04-transfer-error-and-refund-002",
+          "score": 0.201488
+        },
+        {
+          "rank": 2,
+          "source": "04-transfer-error-and-refund.md",
+          "section": "対応フロー",
+          "chunk_id": "04-transfer-error-and-refund-001",
+          "score": 0.115153
+        },
+        {
+          "rank": 3,
+          "source": "04-transfer-error-and-refund.md",
+          "section": "FAQ",
+          "chunk_id": "04-transfer-error-and-refund-004",
+          "score": 0.113033
+        },
+        {
+          "rank": 4,
+          "source": "04-transfer-error-and-refund.md",
+          "section": "受付条件",
+          "chunk_id": "04-transfer-error-and-refund-000",
+          "score": 0.109178
+        },
+        {
+          "rank": 5,
+          "source": "03-domestic-transfer-operations.md",
+          "section": "目的",
+          "chunk_id": "03-domestic-transfer-operations-000",
+          "score": 0.106062
+        }
+      ]
+    },
+    {
+      "id": "FIN-013",
+      "category": "transfer_refund",
+      "question": "二重引落しの疑いがあるとき何を確認しますか",
+      "answerable": true,
+      "expected_sources": [
+        "04-transfer-error-and-refund.md"
+      ],
+      "expected_keywords": [
+        "保留",
+        "二重計上"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.349894,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.747,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "04-transfer-error-and-refund.md",
+          "section": "二重引落しの疑い",
+          "chunk_id": "04-transfer-error-and-refund-003",
+          "score": 0.349894
+        },
+        {
+          "rank": 2,
+          "source": "05-aml-transaction-monitoring.md",
+          "section": "目的",
+          "chunk_id": "05-aml-transaction-monitoring-000",
+          "score": 0.098818
+        },
+        {
+          "rank": 3,
+          "source": "06-suspicious-transaction-escalation.md",
+          "section": "エスカレーション条件",
+          "chunk_id": "06-suspicious-transaction-escalation-001",
+          "score": 0.067905
+        },
+        {
+          "rank": 4,
+          "source": "05-aml-transaction-monitoring.md",
+          "section": "アラート処理",
+          "chunk_id": "05-aml-transaction-monitoring-002",
+          "score": 0.067088
+        },
+        {
+          "rank": 5,
+          "source": "09-loan-repayment-and-delinquency.md",
+          "section": "初期延滞対応",
+          "chunk_id": "09-loan-repayment-and-delinquency-001",
+          "score": 0.035408
+        }
+      ]
+    },
+    {
+      "id": "FIN-014",
+      "category": "aml",
+      "question": "AML モニタリングでは短期間の多数入出金を確認しますか",
+      "answerable": true,
+      "expected_sources": [
+        "05-aml-transaction-monitoring.md"
+      ],
+      "expected_keywords": [
+        "短期間",
+        "多数入出金"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.338124,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 1.019,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "05-aml-transaction-monitoring.md",
+          "section": "主な検知観点",
+          "chunk_id": "05-aml-transaction-monitoring-001",
+          "score": 0.338124
+        },
+        {
+          "rank": 2,
+          "source": "05-aml-transaction-monitoring.md",
+          "section": "FAQ",
+          "chunk_id": "05-aml-transaction-monitoring-004",
+          "score": 0.232185
+        },
+        {
+          "rank": 3,
+          "source": "05-aml-transaction-monitoring.md",
+          "section": "目的",
+          "chunk_id": "05-aml-transaction-monitoring-000",
+          "score": 0.228195
+        },
+        {
+          "rank": 4,
+          "source": "05-aml-transaction-monitoring.md",
+          "section": "アラート処理",
+          "chunk_id": "05-aml-transaction-monitoring-002",
+          "score": 0.220466
+        },
+        {
+          "rank": 5,
+          "source": "05-aml-transaction-monitoring.md",
+          "section": "判断原則",
+          "chunk_id": "05-aml-transaction-monitoring-003",
+          "score": 0.200662
+        }
+      ]
+    },
+    {
+      "id": "FIN-015",
+      "category": "aml",
+      "question": "AML アラートが出たら直ちに口座を凍結しますか",
+      "answerable": true,
+      "expected_sources": [
+        "05-aml-transaction-monitoring.md"
+      ],
+      "expected_keywords": [
+        "一律には凍結しません",
+        "緊急性"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.490253,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.87,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "05-aml-transaction-monitoring.md",
+          "section": "FAQ",
+          "chunk_id": "05-aml-transaction-monitoring-004",
+          "score": 0.490253
+        },
+        {
+          "rank": 2,
+          "source": "05-aml-transaction-monitoring.md",
+          "section": "アラート処理",
+          "chunk_id": "05-aml-transaction-monitoring-002",
+          "score": 0.172893
+        },
+        {
+          "rank": 3,
+          "source": "09-loan-repayment-and-delinquency.md",
+          "section": "FAQ",
+          "chunk_id": "09-loan-repayment-and-delinquency-004",
+          "score": 0.077006
+        },
+        {
+          "rank": 4,
+          "source": "05-aml-transaction-monitoring.md",
+          "section": "目的",
+          "chunk_id": "05-aml-transaction-monitoring-000",
+          "score": 0.058056
+        },
+        {
+          "rank": 5,
+          "source": "05-aml-transaction-monitoring.md",
+          "section": "主な検知観点",
+          "chunk_id": "05-aml-transaction-monitoring-001",
+          "score": 0.05394
+        }
+      ]
+    },
+    {
+      "id": "FIN-016",
+      "category": "aml",
+      "question": "AML モデルのスコアだけで最終判断できますか",
+      "answerable": true,
+      "expected_sources": [
+        "05-aml-transaction-monitoring.md"
+      ],
+      "expected_keywords": [
+        "優先順位付け",
+        "最終判断"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.252222,
+      "expected_rank": 2,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.748,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "08-loan-application-and-underwriting.md",
+          "section": "AI・モデル利用",
+          "chunk_id": "08-loan-application-and-underwriting-003",
+          "score": 0.252222
+        },
+        {
+          "rank": 2,
+          "source": "05-aml-transaction-monitoring.md",
+          "section": "判断原則",
+          "chunk_id": "05-aml-transaction-monitoring-003",
+          "score": 0.197595
+        },
+        {
+          "rank": 3,
+          "source": "08-loan-application-and-underwriting.md",
+          "section": "FAQ",
+          "chunk_id": "08-loan-application-and-underwriting-004",
+          "score": 0.093947
+        },
+        {
+          "rank": 4,
+          "source": "05-aml-transaction-monitoring.md",
+          "section": "アラート処理",
+          "chunk_id": "05-aml-transaction-monitoring-002",
+          "score": 0.068993
+        },
+        {
+          "rank": 5,
+          "source": "05-aml-transaction-monitoring.md",
+          "section": "目的",
+          "chunk_id": "05-aml-transaction-monitoring-000",
+          "score": 0.063834
+        }
+      ]
+    },
+    {
+      "id": "FIN-017",
+      "category": "aml",
+      "question": "休眠口座で突然大口取引が発生した場合は確認対象ですか",
+      "answerable": true,
+      "expected_sources": [
+        "05-aml-transaction-monitoring.md"
+      ],
+      "expected_keywords": [
+        "休眠後",
+        "大口取引"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.11692,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.908,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "05-aml-transaction-monitoring.md",
+          "section": "主な検知観点",
+          "chunk_id": "05-aml-transaction-monitoring-001",
+          "score": 0.11692
+        },
+        {
+          "rank": 2,
+          "source": "11-personal-data-and-records.md",
+          "section": "インシデント対応",
+          "chunk_id": "11-personal-data-and-records-003",
+          "score": 0.071163
+        },
+        {
+          "rank": 3,
+          "source": "10-credit-risk-management.md",
+          "section": "限度超過",
+          "chunk_id": "10-credit-risk-management-003",
+          "score": 0.039442
+        },
+        {
+          "rank": 4,
+          "source": "12-customer-complaints.md",
+          "section": "受付",
+          "chunk_id": "12-customer-complaints-000",
+          "score": 0.031304
+        },
+        {
+          "rank": 5,
+          "source": "12-customer-complaints.md",
+          "section": "FAQ",
+          "chunk_id": "12-customer-complaints-004",
+          "score": 0.030109
+        }
+      ]
+    },
+    {
+      "id": "FIN-018",
+      "category": "suspicious_transaction",
+      "question": "疑わしい取引のエスカレーション条件は何ですか",
+      "answerable": true,
+      "expected_sources": [
+        "06-suspicious-transaction-escalation.md"
+      ],
+      "expected_keywords": [
+        "エスカレーション条件",
+        "提出資料"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.670875,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.821,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "06-suspicious-transaction-escalation.md",
+          "section": "エスカレーション条件",
+          "chunk_id": "06-suspicious-transaction-escalation-001",
+          "score": 0.670875
+        },
+        {
+          "rank": 2,
+          "source": "06-suspicious-transaction-escalation.md",
+          "section": "FAQ",
+          "chunk_id": "06-suspicious-transaction-escalation-004",
+          "score": 0.567313
+        },
+        {
+          "rank": 3,
+          "source": "06-suspicious-transaction-escalation.md",
+          "section": "情報管理",
+          "chunk_id": "06-suspicious-transaction-escalation-003",
+          "score": 0.522301
+        },
+        {
+          "rank": 4,
+          "source": "06-suspicious-transaction-escalation.md",
+          "section": "一次調査",
+          "chunk_id": "06-suspicious-transaction-escalation-000",
+          "score": 0.50202
+        },
+        {
+          "rank": 5,
+          "source": "06-suspicious-transaction-escalation.md",
+          "section": "対応フロー",
+          "chunk_id": "06-suspicious-transaction-escalation-002",
+          "score": 0.48092
+        }
+      ]
+    },
+    {
+      "id": "FIN-019",
+      "category": "suspicious_transaction",
+      "question": "顧客へ疑わしい取引として調査中と説明できますか",
+      "answerable": true,
+      "expected_sources": [
+        "06-suspicious-transaction-escalation.md"
+      ],
+      "expected_keywords": [
+        "できません",
+        "一般的な確認手続"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.56952,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 1.06,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "06-suspicious-transaction-escalation.md",
+          "section": "FAQ",
+          "chunk_id": "06-suspicious-transaction-escalation-004",
+          "score": 0.56952
+        },
+        {
+          "rank": 2,
+          "source": "06-suspicious-transaction-escalation.md",
+          "section": "情報管理",
+          "chunk_id": "06-suspicious-transaction-escalation-003",
+          "score": 0.234685
+        },
+        {
+          "rank": 3,
+          "source": "06-suspicious-transaction-escalation.md",
+          "section": "一次調査",
+          "chunk_id": "06-suspicious-transaction-escalation-000",
+          "score": 0.229681
+        },
+        {
+          "rank": 4,
+          "source": "06-suspicious-transaction-escalation.md",
+          "section": "エスカレーション条件",
+          "chunk_id": "06-suspicious-transaction-escalation-001",
+          "score": 0.212702
+        },
+        {
+          "rank": 5,
+          "source": "06-suspicious-transaction-escalation.md",
+          "section": "対応フロー",
+          "chunk_id": "06-suspicious-transaction-escalation-002",
+          "score": 0.198768
+        }
+      ]
+    },
+    {
+      "id": "FIN-020",
+      "category": "suspicious_transaction",
+      "question": "疑わしい取引のケース情報は誰でも閲覧できますか",
+      "answerable": true,
+      "expected_sources": [
+        "06-suspicious-transaction-escalation.md"
+      ],
+      "expected_keywords": [
+        "Need-to-Know",
+        "閲覧・更新履歴"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.342499,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.914,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "06-suspicious-transaction-escalation.md",
+          "section": "情報管理",
+          "chunk_id": "06-suspicious-transaction-escalation-003",
+          "score": 0.342499
+        },
+        {
+          "rank": 2,
+          "source": "06-suspicious-transaction-escalation.md",
+          "section": "FAQ",
+          "chunk_id": "06-suspicious-transaction-escalation-004",
+          "score": 0.24931
+        },
+        {
+          "rank": 3,
+          "source": "06-suspicious-transaction-escalation.md",
+          "section": "対応フロー",
+          "chunk_id": "06-suspicious-transaction-escalation-002",
+          "score": 0.225549
+        },
+        {
+          "rank": 4,
+          "source": "06-suspicious-transaction-escalation.md",
+          "section": "一次調査",
+          "chunk_id": "06-suspicious-transaction-escalation-000",
+          "score": 0.216951
+        },
+        {
+          "rank": 5,
+          "source": "06-suspicious-transaction-escalation.md",
+          "section": "エスカレーション条件",
+          "chunk_id": "06-suspicious-transaction-escalation-001",
+          "score": 0.194654
+        }
+      ]
+    },
+    {
+      "id": "FIN-021",
+      "category": "fraud",
+      "question": "不正送金が疑われるときの緊急対応は何ですか",
+      "answerable": true,
+      "expected_sources": [
+        "07-fraud-and-account-takeover.md"
+      ],
+      "expected_keywords": [
+        "セッション失効",
+        "取引制限"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.243865,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.786,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "07-fraud-and-account-takeover.md",
+          "section": "FAQ",
+          "chunk_id": "07-fraud-and-account-takeover-004",
+          "score": 0.243865
+        },
+        {
+          "rank": 2,
+          "source": "07-fraud-and-account-takeover.md",
+          "section": "緊急対応",
+          "chunk_id": "07-fraud-and-account-takeover-001",
+          "score": 0.223566
+        },
+        {
+          "rank": 3,
+          "source": "07-fraud-and-account-takeover.md",
+          "section": "補償判断",
+          "chunk_id": "07-fraud-and-account-takeover-003",
+          "score": 0.133911
+        },
+        {
+          "rank": 4,
+          "source": "07-fraud-and-account-takeover.md",
+          "section": "顧客案内",
+          "chunk_id": "07-fraud-and-account-takeover-002",
+          "score": 0.123167
+        },
+        {
+          "rank": 5,
+          "source": "07-fraud-and-account-takeover.md",
+          "section": "主な兆候",
+          "chunk_id": "07-fraud-and-account-takeover-000",
+          "score": 0.11701
+        }
+      ]
+    },
+    {
+      "id": "FIN-022",
+      "category": "fraud",
+      "question": "顧客からワンタイムパスワードを聞き取ってよいですか",
+      "answerable": true,
+      "expected_sources": [
+        "07-fraud-and-account-takeover.md"
+      ],
+      "expected_keywords": [
+        "聞き取りません",
+        "ワンタイムパスワード"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.319113,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 1.061,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "07-fraud-and-account-takeover.md",
+          "section": "顧客案内",
+          "chunk_id": "07-fraud-and-account-takeover-002",
+          "score": 0.319113
+        },
+        {
+          "rank": 2,
+          "source": "04-transfer-error-and-refund.md",
+          "section": "受付条件",
+          "chunk_id": "04-transfer-error-and-refund-000",
+          "score": 0.214744
+        },
+        {
+          "rank": 3,
+          "source": "07-fraud-and-account-takeover.md",
+          "section": "主な兆候",
+          "chunk_id": "07-fraud-and-account-takeover-000",
+          "score": 0.186476
+        },
+        {
+          "rank": 4,
+          "source": "11-personal-data-and-records.md",
+          "section": "情報分類",
+          "chunk_id": "11-personal-data-and-records-000",
+          "score": 0.062754
+        },
+        {
+          "rank": 5,
+          "source": "00-knowledge-base-scope.md",
+          "section": "利用ルール",
+          "chunk_id": "00-knowledge-base-scope-002",
+          "score": 0.047227
+        }
+      ]
+    },
+    {
+      "id": "FIN-023",
+      "category": "fraud",
+      "question": "不正送金の申告時に補償を約束できますか",
+      "answerable": true,
+      "expected_sources": [
+        "07-fraud-and-account-takeover.md"
+      ],
+      "expected_keywords": [
+        "約束してはいけません",
+        "所管部署"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.358573,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.806,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "07-fraud-and-account-takeover.md",
+          "section": "補償判断",
+          "chunk_id": "07-fraud-and-account-takeover-003",
+          "score": 0.358573
+        },
+        {
+          "rank": 2,
+          "source": "07-fraud-and-account-takeover.md",
+          "section": "主な兆候",
+          "chunk_id": "07-fraud-and-account-takeover-000",
+          "score": 0.152025
+        },
+        {
+          "rank": 3,
+          "source": "07-fraud-and-account-takeover.md",
+          "section": "FAQ",
+          "chunk_id": "07-fraud-and-account-takeover-004",
+          "score": 0.12998
+        },
+        {
+          "rank": 4,
+          "source": "07-fraud-and-account-takeover.md",
+          "section": "顧客案内",
+          "chunk_id": "07-fraud-and-account-takeover-002",
+          "score": 0.124582
+        },
+        {
+          "rank": 5,
+          "source": "07-fraud-and-account-takeover.md",
+          "section": "緊急対応",
+          "chunk_id": "07-fraud-and-account-takeover-001",
+          "score": 0.11975
+        }
+      ]
+    },
+    {
+      "id": "FIN-024",
+      "category": "loan_underwriting",
+      "question": "融資審査スコアが基準未満なら自動否決ですか",
+      "answerable": true,
+      "expected_sources": [
+        "08-loan-application-and-underwriting.md"
+      ],
+      "expected_keywords": [
+        "自動否決しません",
+        "権限者"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.520272,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.785,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "08-loan-application-and-underwriting.md",
+          "section": "FAQ",
+          "chunk_id": "08-loan-application-and-underwriting-004",
+          "score": 0.520272
+        },
+        {
+          "rank": 2,
+          "source": "08-loan-application-and-underwriting.md",
+          "section": "審査フロー",
+          "chunk_id": "08-loan-application-and-underwriting-002",
+          "score": 0.090163
+        },
+        {
+          "rank": 3,
+          "source": "08-loan-application-and-underwriting.md",
+          "section": "AI・モデル利用",
+          "chunk_id": "08-loan-application-and-underwriting-003",
+          "score": 0.072657
+        },
+        {
+          "rank": 4,
+          "source": "08-loan-application-and-underwriting.md",
+          "section": "目的",
+          "chunk_id": "08-loan-application-and-underwriting-000",
+          "score": 0.060265
+        },
+        {
+          "rank": 5,
+          "source": "08-loan-application-and-underwriting.md",
+          "section": "確認項目",
+          "chunk_id": "08-loan-application-and-underwriting-001",
+          "score": 0.049258
+        }
+      ]
+    },
+    {
+      "id": "FIN-025",
+      "category": "loan_underwriting",
+      "question": "融資申込では返済能力以外に何を確認しますか",
+      "answerable": true,
+      "expected_sources": [
+        "08-loan-application-and-underwriting.md"
+      ],
+      "expected_keywords": [
+        "資金使途",
+        "返済原資"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.228941,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.821,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "08-loan-application-and-underwriting.md",
+          "section": "目的",
+          "chunk_id": "08-loan-application-and-underwriting-000",
+          "score": 0.228941
+        },
+        {
+          "rank": 2,
+          "source": "08-loan-application-and-underwriting.md",
+          "section": "確認項目",
+          "chunk_id": "08-loan-application-and-underwriting-001",
+          "score": 0.16136
+        },
+        {
+          "rank": 3,
+          "source": "08-loan-application-and-underwriting.md",
+          "section": "FAQ",
+          "chunk_id": "08-loan-application-and-underwriting-004",
+          "score": 0.151882
+        },
+        {
+          "rank": 4,
+          "source": "10-credit-risk-management.md",
+          "section": "FAQ",
+          "chunk_id": "10-credit-risk-management-004",
+          "score": 0.139219
+        },
+        {
+          "rank": 5,
+          "source": "08-loan-application-and-underwriting.md",
+          "section": "審査フロー",
+          "chunk_id": "08-loan-application-and-underwriting-002",
+          "score": 0.135551
+        }
+      ]
+    },
+    {
+      "id": "FIN-026",
+      "category": "loan_underwriting",
+      "question": "融資審査の結果には承認以外にどのような区分がありますか",
+      "answerable": true,
+      "expected_sources": [
+        "08-loan-application-and-underwriting.md"
+      ],
+      "expected_keywords": [
+        "条件付き承認",
+        "追加確認"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.065756,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.894,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "08-loan-application-and-underwriting.md",
+          "section": "審査フロー",
+          "chunk_id": "08-loan-application-and-underwriting-002",
+          "score": 0.065756
+        },
+        {
+          "rank": 2,
+          "source": "08-loan-application-and-underwriting.md",
+          "section": "目的",
+          "chunk_id": "08-loan-application-and-underwriting-000",
+          "score": 0.04986
+        },
+        {
+          "rank": 3,
+          "source": "08-loan-application-and-underwriting.md",
+          "section": "FAQ",
+          "chunk_id": "08-loan-application-and-underwriting-004",
+          "score": 0.04339
+        },
+        {
+          "rank": 4,
+          "source": "11-personal-data-and-records.md",
+          "section": "取扱原則",
+          "chunk_id": "11-personal-data-and-records-001",
+          "score": 0.041225
+        },
+        {
+          "rank": 5,
+          "source": "08-loan-application-and-underwriting.md",
+          "section": "確認項目",
+          "chunk_id": "08-loan-application-and-underwriting-001",
+          "score": 0.040878
+        }
+      ]
+    },
+    {
+      "id": "FIN-027",
+      "category": "loan_underwriting",
+      "question": "融資モデル利用時に記録する内容は何ですか",
+      "answerable": true,
+      "expected_sources": [
+        "08-loan-application-and-underwriting.md"
+      ],
+      "expected_keywords": [
+        "主要な判断要因",
+        "モデルバージョン"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.219474,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.727,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "08-loan-application-and-underwriting.md",
+          "section": "AI・モデル利用",
+          "chunk_id": "08-loan-application-and-underwriting-003",
+          "score": 0.219474
+        },
+        {
+          "rank": 2,
+          "source": "11-personal-data-and-records.md",
+          "section": "AI 利用時の禁止事項",
+          "chunk_id": "11-personal-data-and-records-002",
+          "score": 0.084287
+        },
+        {
+          "rank": 3,
+          "source": "11-personal-data-and-records.md",
+          "section": "取扱原則",
+          "chunk_id": "11-personal-data-and-records-001",
+          "score": 0.067732
+        },
+        {
+          "rank": 4,
+          "source": "00-knowledge-base-scope.md",
+          "section": "利用ルール",
+          "chunk_id": "00-knowledge-base-scope-002",
+          "score": 0.042782
+        },
+        {
+          "rank": 5,
+          "source": "05-aml-transaction-monitoring.md",
+          "section": "判断原則",
+          "chunk_id": "05-aml-transaction-monitoring-003",
+          "score": 0.034225
+        }
+      ]
+    },
+    {
+      "id": "FIN-028",
+      "category": "delinquency",
+      "question": "返済が遅れた顧客への初期対応は何ですか",
+      "answerable": true,
+      "expected_sources": [
+        "09-loan-repayment-and-delinquency.md"
+      ],
+      "expected_keywords": [
+        "支払可能日",
+        "次回確認日"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.119148,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.658,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "09-loan-repayment-and-delinquency.md",
+          "section": "FAQ",
+          "chunk_id": "09-loan-repayment-and-delinquency-004",
+          "score": 0.119148
+        },
+        {
+          "rank": 2,
+          "source": "09-loan-repayment-and-delinquency.md",
+          "section": "初期延滞対応",
+          "chunk_id": "09-loan-repayment-and-delinquency-001",
+          "score": 0.084942
+        },
+        {
+          "rank": 3,
+          "source": "09-loan-repayment-and-delinquency.md",
+          "section": "顧客保護",
+          "chunk_id": "09-loan-repayment-and-delinquency-003",
+          "score": 0.060352
+        },
+        {
+          "rank": 4,
+          "source": "09-loan-repayment-and-delinquency.md",
+          "section": "返済条件変更",
+          "chunk_id": "09-loan-repayment-and-delinquency-002",
+          "score": 0.051223
+        },
+        {
+          "rank": 5,
+          "source": "14-business-continuity.md",
+          "section": "優先業務",
+          "chunk_id": "14-business-continuity-000",
+          "score": 0.05085
+        }
+      ]
+    },
+    {
+      "id": "FIN-029",
+      "category": "delinquency",
+      "question": "担当者が口頭で返済条件変更を約束できますか",
+      "answerable": true,
+      "expected_sources": [
+        "09-loan-repayment-and-delinquency.md"
+      ],
+      "expected_keywords": [
+        "口頭で確約",
+        "正式な変更契約"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.386066,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.661,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "09-loan-repayment-and-delinquency.md",
+          "section": "返済条件変更",
+          "chunk_id": "09-loan-repayment-and-delinquency-002",
+          "score": 0.386066
+        },
+        {
+          "rank": 2,
+          "source": "07-fraud-and-account-takeover.md",
+          "section": "補償判断",
+          "chunk_id": "07-fraud-and-account-takeover-003",
+          "score": 0.09055
+        },
+        {
+          "rank": 3,
+          "source": "16-regulatory-change-management.md",
+          "section": "目的",
+          "chunk_id": "16-regulatory-change-management-000",
+          "score": 0.063267
+        },
+        {
+          "rank": 4,
+          "source": "10-credit-risk-management.md",
+          "section": "モニタリング項目",
+          "chunk_id": "10-credit-risk-management-001",
+          "score": 0.055705
+        },
+        {
+          "rank": 5,
+          "source": "16-regulatory-change-management.md",
+          "section": "緊急変更",
+          "chunk_id": "16-regulatory-change-management-003",
+          "score": 0.053337
+        }
+      ]
+    },
+    {
+      "id": "FIN-030",
+      "category": "delinquency",
+      "question": "返済が一度遅れたら直ちに期限の利益を失いますか",
+      "answerable": true,
+      "expected_sources": [
+        "09-loan-repayment-and-delinquency.md"
+      ],
+      "expected_keywords": [
+        "一律には判断しません",
+        "正式な通知手続"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.498895,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.735,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "09-loan-repayment-and-delinquency.md",
+          "section": "FAQ",
+          "chunk_id": "09-loan-repayment-and-delinquency-004",
+          "score": 0.498895
+        },
+        {
+          "rank": 2,
+          "source": "05-aml-transaction-monitoring.md",
+          "section": "FAQ",
+          "chunk_id": "05-aml-transaction-monitoring-004",
+          "score": 0.08544
+        },
+        {
+          "rank": 3,
+          "source": "09-loan-repayment-and-delinquency.md",
+          "section": "顧客保護",
+          "chunk_id": "09-loan-repayment-and-delinquency-003",
+          "score": 0.035994
+        },
+        {
+          "rank": 4,
+          "source": "09-loan-repayment-and-delinquency.md",
+          "section": "返済条件変更",
+          "chunk_id": "09-loan-repayment-and-delinquency-002",
+          "score": 0.031701
+        },
+        {
+          "rank": 5,
+          "source": "09-loan-repayment-and-delinquency.md",
+          "section": "返済管理",
+          "chunk_id": "09-loan-repayment-and-delinquency-000",
+          "score": 0.031106
+        }
+      ]
+    },
+    {
+      "id": "FIN-031",
+      "category": "credit_risk",
+      "question": "信用リスクの早期警戒兆候には何がありますか",
+      "answerable": true,
+      "expected_sources": [
+        "10-credit-risk-management.md"
+      ],
+      "expected_keywords": [
+        "売上急減",
+        "返済遅延"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.386529,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.642,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "10-credit-risk-management.md",
+          "section": "早期警戒",
+          "chunk_id": "10-credit-risk-management-002",
+          "score": 0.386529
+        },
+        {
+          "rank": 2,
+          "source": "10-credit-risk-management.md",
+          "section": "目的",
+          "chunk_id": "10-credit-risk-management-000",
+          "score": 0.18191
+        },
+        {
+          "rank": 3,
+          "source": "10-credit-risk-management.md",
+          "section": "限度超過",
+          "chunk_id": "10-credit-risk-management-003",
+          "score": 0.173481
+        },
+        {
+          "rank": 4,
+          "source": "10-credit-risk-management.md",
+          "section": "FAQ",
+          "chunk_id": "10-credit-risk-management-004",
+          "score": 0.170029
+        },
+        {
+          "rank": 5,
+          "source": "10-credit-risk-management.md",
+          "section": "モニタリング項目",
+          "chunk_id": "10-credit-risk-management-001",
+          "score": 0.166372
+        }
+      ]
+    },
+    {
+      "id": "FIN-032",
+      "category": "credit_risk",
+      "question": "与信限度を超過した場合はどうしますか",
+      "answerable": true,
+      "expected_sources": [
+        "10-credit-risk-management.md"
+      ],
+      "expected_keywords": [
+        "新規実行を停止",
+        "例外承認"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.12902,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.587,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "10-credit-risk-management.md",
+          "section": "限度超過",
+          "chunk_id": "10-credit-risk-management-003",
+          "score": 0.12902
+        },
+        {
+          "rank": 2,
+          "source": "01-customer-onboarding-kyc.md",
+          "section": "FAQ",
+          "chunk_id": "01-customer-onboarding-kyc-005",
+          "score": 0.105832
+        },
+        {
+          "rank": 3,
+          "source": "11-personal-data-and-records.md",
+          "section": "インシデント対応",
+          "chunk_id": "11-personal-data-and-records-003",
+          "score": 0.078012
+        },
+        {
+          "rank": 4,
+          "source": "10-credit-risk-management.md",
+          "section": "モニタリング項目",
+          "chunk_id": "10-credit-risk-management-001",
+          "score": 0.076734
+        },
+        {
+          "rank": 5,
+          "source": "12-customer-complaints.md",
+          "section": "FAQ",
+          "chunk_id": "12-customer-complaints-004",
+          "score": 0.067294
+        }
+      ]
+    },
+    {
+      "id": "FIN-033",
+      "category": "credit_risk",
+      "question": "担保が十分なら返済能力の確認は不要ですか",
+      "answerable": true,
+      "expected_sources": [
+        "10-credit-risk-management.md"
+      ],
+      "expected_keywords": [
+        "担保は補完手段",
+        "返済能力"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.356097,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.658,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "10-credit-risk-management.md",
+          "section": "FAQ",
+          "chunk_id": "10-credit-risk-management-004",
+          "score": 0.356097
+        },
+        {
+          "rank": 2,
+          "source": "08-loan-application-and-underwriting.md",
+          "section": "目的",
+          "chunk_id": "08-loan-application-and-underwriting-000",
+          "score": 0.077996
+        },
+        {
+          "rank": 3,
+          "source": "01-customer-onboarding-kyc.md",
+          "section": "法人顧客の確認項目",
+          "chunk_id": "01-customer-onboarding-kyc-002",
+          "score": 0.052576
+        },
+        {
+          "rank": 4,
+          "source": "01-customer-onboarding-kyc.md",
+          "section": "個人顧客の確認項目",
+          "chunk_id": "01-customer-onboarding-kyc-001",
+          "score": 0.051238
+        },
+        {
+          "rank": 5,
+          "source": "16-regulatory-change-management.md",
+          "section": "FAQ",
+          "chunk_id": "16-regulatory-change-management-004",
+          "score": 0.045538
+        }
+      ]
+    },
+    {
+      "id": "FIN-034",
+      "category": "data_protection",
+      "question": "この PoC に実在顧客の個人情報を入力できますか",
+      "answerable": true,
+      "expected_sources": [
+        "11-personal-data-and-records.md"
+      ],
+      "expected_keywords": [
+        "入力してはいけません",
+        "匿名化・合成データ"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.253016,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.681,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "11-personal-data-and-records.md",
+          "section": "AI 利用時の禁止事項",
+          "chunk_id": "11-personal-data-and-records-002",
+          "score": 0.253016
+        },
+        {
+          "rank": 2,
+          "source": "04-transfer-error-and-refund.md",
+          "section": "禁止事項",
+          "chunk_id": "04-transfer-error-and-refund-002",
+          "score": 0.074941
+        },
+        {
+          "rank": 3,
+          "source": "01-customer-onboarding-kyc.md",
+          "section": "個人顧客の確認項目",
+          "chunk_id": "01-customer-onboarding-kyc-001",
+          "score": 0.059588
+        },
+        {
+          "rank": 4,
+          "source": "11-personal-data-and-records.md",
+          "section": "インシデント対応",
+          "chunk_id": "11-personal-data-and-records-003",
+          "score": 0.059504
+        },
+        {
+          "rank": 5,
+          "source": "11-personal-data-and-records.md",
+          "section": "情報分類",
+          "chunk_id": "11-personal-data-and-records-000",
+          "score": 0.046287
+        }
+      ]
+    },
+    {
+      "id": "FIN-035",
+      "category": "data_protection",
+      "question": "顧客本人の依頼なら登録外メールへ明細を送れますか",
+      "answerable": true,
+      "expected_sources": [
+        "11-personal-data-and-records.md"
+      ],
+      "expected_keywords": [
+        "送付しません",
+        "安全な送信方法"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.319854,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.808,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "11-personal-data-and-records.md",
+          "section": "FAQ",
+          "chunk_id": "11-personal-data-and-records-004",
+          "score": 0.319854
+        },
+        {
+          "rank": 2,
+          "source": "15-financial-product-suitability.md",
+          "section": "顧客本位の基本",
+          "chunk_id": "15-financial-product-suitability-000",
+          "score": 0.042735
+        },
+        {
+          "rank": 3,
+          "source": "05-aml-transaction-monitoring.md",
+          "section": "判断原則",
+          "chunk_id": "05-aml-transaction-monitoring-003",
+          "score": 0.031706
+        },
+        {
+          "rank": 4,
+          "source": "01-customer-onboarding-kyc.md",
+          "section": "個人顧客の確認項目",
+          "chunk_id": "01-customer-onboarding-kyc-001",
+          "score": 0.029943
+        },
+        {
+          "rank": 5,
+          "source": "07-fraud-and-account-takeover.md",
+          "section": "緊急対応",
+          "chunk_id": "07-fraud-and-account-takeover-001",
+          "score": 0.029035
+        }
+      ]
+    },
+    {
+      "id": "FIN-036",
+      "category": "data_protection",
+      "question": "顧客情報の誤送信を発見したらどうしますか",
+      "answerable": true,
+      "expected_sources": [
+        "11-personal-data-and-records.md"
+      ],
+      "expected_keywords": [
+        "直ちに",
+        "影響範囲"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.322774,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.795,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "11-personal-data-and-records.md",
+          "section": "インシデント対応",
+          "chunk_id": "11-personal-data-and-records-003",
+          "score": 0.322774
+        },
+        {
+          "rank": 2,
+          "source": "11-personal-data-and-records.md",
+          "section": "FAQ",
+          "chunk_id": "11-personal-data-and-records-004",
+          "score": 0.114738
+        },
+        {
+          "rank": 3,
+          "source": "11-personal-data-and-records.md",
+          "section": "取扱原則",
+          "chunk_id": "11-personal-data-and-records-001",
+          "score": 0.109496
+        },
+        {
+          "rank": 4,
+          "source": "11-personal-data-and-records.md",
+          "section": "情報分類",
+          "chunk_id": "11-personal-data-and-records-000",
+          "score": 0.103383
+        },
+        {
+          "rank": 5,
+          "source": "11-personal-data-and-records.md",
+          "section": "AI 利用時の禁止事項",
+          "chunk_id": "11-personal-data-and-records-002",
+          "score": 0.098155
+        }
+      ]
+    },
+    {
+      "id": "FIN-037",
+      "category": "complaint",
+      "question": "苦情受付後の初回案内はいつまでに行いますか",
+      "answerable": true,
+      "expected_sources": [
+        "12-customer-complaints.md"
+      ],
+      "expected_keywords": [
+        "1 営業日以内",
+        "サービス目標"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.095554,
+      "expected_rank": 2,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.754,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "03-domestic-transfer-operations.md",
+          "section": "FAQ",
+          "chunk_id": "03-domestic-transfer-operations-004",
+          "score": 0.095554
+        },
+        {
+          "rank": 2,
+          "source": "12-customer-complaints.md",
+          "section": "初動",
+          "chunk_id": "12-customer-complaints-001",
+          "score": 0.066495
+        },
+        {
+          "rank": 3,
+          "source": "12-customer-complaints.md",
+          "section": "受付",
+          "chunk_id": "12-customer-complaints-000",
+          "score": 0.045497
+        },
+        {
+          "rank": 4,
+          "source": "12-customer-complaints.md",
+          "section": "禁止事項",
+          "chunk_id": "12-customer-complaints-003",
+          "score": 0.033139
+        },
+        {
+          "rank": 5,
+          "source": "03-domestic-transfer-operations.md",
+          "section": "業務ルール",
+          "chunk_id": "03-domestic-transfer-operations-003",
+          "score": 0.030905
+        }
+      ]
+    },
+    {
+      "id": "FIN-038",
+      "category": "complaint",
+      "question": "SNS に投稿すると言われた苦情を最優先にしますか",
+      "answerable": true,
+      "expected_sources": [
+        "12-customer-complaints.md"
+      ],
+      "expected_keywords": [
+        "リスクで優先度",
+        "顧客影響"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.334363,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.89,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "12-customer-complaints.md",
+          "section": "FAQ",
+          "chunk_id": "12-customer-complaints-004",
+          "score": 0.334363
+        },
+        {
+          "rank": 2,
+          "source": "12-customer-complaints.md",
+          "section": "受付",
+          "chunk_id": "12-customer-complaints-000",
+          "score": 0.031018
+        },
+        {
+          "rank": 3,
+          "source": "12-customer-complaints.md",
+          "section": "禁止事項",
+          "chunk_id": "12-customer-complaints-003",
+          "score": 0.024838
+        },
+        {
+          "rank": 4,
+          "source": "12-customer-complaints.md",
+          "section": "初動",
+          "chunk_id": "12-customer-complaints-001",
+          "score": 0.022944
+        },
+        {
+          "rank": 5,
+          "source": "12-customer-complaints.md",
+          "section": "調査フロー",
+          "chunk_id": "12-customer-complaints-002",
+          "score": 0.021061
+        }
+      ]
+    },
+    {
+      "id": "FIN-039",
+      "category": "cybersecurity",
+      "question": "P1 サイバーインシデントの第一報目標は何分ですか",
+      "answerable": true,
+      "expected_sources": [
+        "13-cybersecurity-incident-response.md"
+      ],
+      "expected_keywords": [
+        "30 分以内",
+        "第一報"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.345017,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.814,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "13-cybersecurity-incident-response.md",
+          "section": "FAQ",
+          "chunk_id": "13-cybersecurity-incident-response-004",
+          "score": 0.345017
+        },
+        {
+          "rank": 2,
+          "source": "13-cybersecurity-incident-response.md",
+          "section": "重大度",
+          "chunk_id": "13-cybersecurity-incident-response-002",
+          "score": 0.3307
+        },
+        {
+          "rank": 3,
+          "source": "13-cybersecurity-incident-response.md",
+          "section": "対象事象",
+          "chunk_id": "13-cybersecurity-incident-response-000",
+          "score": 0.315873
+        },
+        {
+          "rank": 4,
+          "source": "13-cybersecurity-incident-response.md",
+          "section": "証跡保全",
+          "chunk_id": "13-cybersecurity-incident-response-003",
+          "score": 0.313096
+        },
+        {
+          "rank": 5,
+          "source": "13-cybersecurity-incident-response.md",
+          "section": "初動",
+          "chunk_id": "13-cybersecurity-incident-response-001",
+          "score": 0.306382
+        }
+      ]
+    },
+    {
+      "id": "FIN-040",
+      "category": "cybersecurity",
+      "question": "サービス復旧のためにログを削除してよいですか",
+      "answerable": true,
+      "expected_sources": [
+        "13-cybersecurity-incident-response.md"
+      ],
+      "expected_keywords": [
+        "できません",
+        "証跡保全"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.265167,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.74,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "13-cybersecurity-incident-response.md",
+          "section": "FAQ",
+          "chunk_id": "13-cybersecurity-incident-response-004",
+          "score": 0.265167
+        },
+        {
+          "rank": 2,
+          "source": "14-business-continuity.md",
+          "section": "FAQ",
+          "chunk_id": "14-business-continuity-004",
+          "score": 0.064342
+        },
+        {
+          "rank": 3,
+          "source": "12-customer-complaints.md",
+          "section": "初動",
+          "chunk_id": "12-customer-complaints-001",
+          "score": 0.044138
+        },
+        {
+          "rank": 4,
+          "source": "11-personal-data-and-records.md",
+          "section": "インシデント対応",
+          "chunk_id": "11-personal-data-and-records-003",
+          "score": 0.042465
+        },
+        {
+          "rank": 5,
+          "source": "07-fraud-and-account-takeover.md",
+          "section": "顧客案内",
+          "chunk_id": "07-fraud-and-account-takeover-002",
+          "score": 0.042457
+        }
+      ]
+    },
+    {
+      "id": "FIN-041",
+      "category": "bcp",
+      "question": "障害中に振込結果が不明な場合は再送してよいですか",
+      "answerable": true,
+      "expected_sources": [
+        "14-business-continuity.md"
+      ],
+      "expected_keywords": [
+        "再送しません",
+        "重複送信"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.171682,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.786,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "14-business-continuity.md",
+          "section": "FAQ",
+          "chunk_id": "14-business-continuity-004",
+          "score": 0.171682
+        },
+        {
+          "rank": 2,
+          "source": "13-cybersecurity-incident-response.md",
+          "section": "FAQ",
+          "chunk_id": "13-cybersecurity-incident-response-004",
+          "score": 0.046509
+        },
+        {
+          "rank": 3,
+          "source": "14-business-continuity.md",
+          "section": "発動判断",
+          "chunk_id": "14-business-continuity-001",
+          "score": 0.038698
+        },
+        {
+          "rank": 4,
+          "source": "03-domestic-transfer-operations.md",
+          "section": "業務ルール",
+          "chunk_id": "03-domestic-transfer-operations-003",
+          "score": 0.033744
+        },
+        {
+          "rank": 5,
+          "source": "12-customer-complaints.md",
+          "section": "受付",
+          "chunk_id": "12-customer-complaints-000",
+          "score": 0.030203
+        }
+      ]
+    },
+    {
+      "id": "FIN-042",
+      "category": "bcp",
+      "question": "システムが起動すれば復旧完了ですか",
+      "answerable": true,
+      "expected_sources": [
+        "14-business-continuity.md"
+      ],
+      "expected_keywords": [
+        "単にシステムが起動しただけ",
+        "業務部門"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.224086,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.635,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "14-business-continuity.md",
+          "section": "復旧管理",
+          "chunk_id": "14-business-continuity-003",
+          "score": 0.224086
+        },
+        {
+          "rank": 2,
+          "source": "13-cybersecurity-incident-response.md",
+          "section": "FAQ",
+          "chunk_id": "13-cybersecurity-incident-response-004",
+          "score": 0.114628
+        },
+        {
+          "rank": 3,
+          "source": "13-cybersecurity-incident-response.md",
+          "section": "証跡保全",
+          "chunk_id": "13-cybersecurity-incident-response-003",
+          "score": 0.10702
+        },
+        {
+          "rank": 4,
+          "source": "13-cybersecurity-incident-response.md",
+          "section": "初動",
+          "chunk_id": "13-cybersecurity-incident-response-001",
+          "score": 0.106836
+        },
+        {
+          "rank": 5,
+          "source": "13-cybersecurity-incident-response.md",
+          "section": "対象事象",
+          "chunk_id": "13-cybersecurity-incident-response-000",
+          "score": 0.094993
+        }
+      ]
+    },
+    {
+      "id": "FIN-043",
+      "category": "product_suitability",
+      "question": "金融商品を必ず利益が出ると説明してよいですか",
+      "answerable": true,
+      "expected_sources": [
+        "15-financial-product-suitability.md"
+      ],
+      "expected_keywords": [
+        "必ず利益が出る",
+        "禁止事項"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.285392,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.944,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "15-financial-product-suitability.md",
+          "section": "禁止事項",
+          "chunk_id": "15-financial-product-suitability-002",
+          "score": 0.285392
+        },
+        {
+          "rank": 2,
+          "source": "15-financial-product-suitability.md",
+          "section": "FAQ",
+          "chunk_id": "15-financial-product-suitability-004",
+          "score": 0.181162
+        },
+        {
+          "rank": 3,
+          "source": "15-financial-product-suitability.md",
+          "section": "顧客本位の基本",
+          "chunk_id": "15-financial-product-suitability-000",
+          "score": 0.150232
+        },
+        {
+          "rank": 4,
+          "source": "15-financial-product-suitability.md",
+          "section": "確認項目",
+          "chunk_id": "15-financial-product-suitability-001",
+          "score": 0.129859
+        },
+        {
+          "rank": 5,
+          "source": "15-financial-product-suitability.md",
+          "section": "高齢者・支援が必要な顧客",
+          "chunk_id": "15-financial-product-suitability-003",
+          "score": 0.113917
+        }
+      ]
+    },
+    {
+      "id": "FIN-044",
+      "category": "product_suitability",
+      "question": "顧客が高収益商品を希望すればそのまま販売できますか",
+      "answerable": true,
+      "expected_sources": [
+        "15-financial-product-suitability.md"
+      ],
+      "expected_keywords": [
+        "損失許容度",
+        "代替案"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.422395,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.888,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "15-financial-product-suitability.md",
+          "section": "FAQ",
+          "chunk_id": "15-financial-product-suitability-004",
+          "score": 0.422395
+        },
+        {
+          "rank": 2,
+          "source": "12-customer-complaints.md",
+          "section": "受付",
+          "chunk_id": "12-customer-complaints-000",
+          "score": 0.065482
+        },
+        {
+          "rank": 3,
+          "source": "15-financial-product-suitability.md",
+          "section": "禁止事項",
+          "chunk_id": "15-financial-product-suitability-002",
+          "score": 0.058831
+        },
+        {
+          "rank": 4,
+          "source": "16-regulatory-change-management.md",
+          "section": "FAQ",
+          "chunk_id": "16-regulatory-change-management-004",
+          "score": 0.038033
+        },
+        {
+          "rank": 5,
+          "source": "15-financial-product-suitability.md",
+          "section": "顧客本位の基本",
+          "chunk_id": "15-financial-product-suitability-000",
+          "score": 0.037522
+        }
+      ]
+    },
+    {
+      "id": "FIN-045",
+      "category": "product_suitability",
+      "question": "高齢者という理由だけで金融商品取引を拒否しますか",
+      "answerable": true,
+      "expected_sources": [
+        "15-financial-product-suitability.md"
+      ],
+      "expected_keywords": [
+        "一律に取引を拒否せず",
+        "判断能力"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.228453,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.865,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "15-financial-product-suitability.md",
+          "section": "高齢者・支援が必要な顧客",
+          "chunk_id": "15-financial-product-suitability-003",
+          "score": 0.228453
+        },
+        {
+          "rank": 2,
+          "source": "15-financial-product-suitability.md",
+          "section": "FAQ",
+          "chunk_id": "15-financial-product-suitability-004",
+          "score": 0.116112
+        },
+        {
+          "rank": 3,
+          "source": "15-financial-product-suitability.md",
+          "section": "禁止事項",
+          "chunk_id": "15-financial-product-suitability-002",
+          "score": 0.111061
+        },
+        {
+          "rank": 4,
+          "source": "15-financial-product-suitability.md",
+          "section": "顧客本位の基本",
+          "chunk_id": "15-financial-product-suitability-000",
+          "score": 0.109045
+        },
+        {
+          "rank": 5,
+          "source": "15-financial-product-suitability.md",
+          "section": "確認項目",
+          "chunk_id": "15-financial-product-suitability-001",
+          "score": 0.096063
+        }
+      ]
+    },
+    {
+      "id": "FIN-046",
+      "category": "regulatory_change",
+      "question": "規程変更後に RAG ナレッジを更新する手順は何ですか",
+      "answerable": true,
+      "expected_sources": [
+        "16-regulatory-change-management.md"
+      ],
+      "expected_keywords": [
+        "索引再構築",
+        "回帰確認"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.313645,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.869,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "16-regulatory-change-management.md",
+          "section": "RAG ナレッジ更新",
+          "chunk_id": "16-regulatory-change-management-002",
+          "score": 0.313645
+        },
+        {
+          "rank": 2,
+          "source": "16-regulatory-change-management.md",
+          "section": "目的",
+          "chunk_id": "16-regulatory-change-management-000",
+          "score": 0.16098
+        },
+        {
+          "rank": 3,
+          "source": "16-regulatory-change-management.md",
+          "section": "変更フロー",
+          "chunk_id": "16-regulatory-change-management-001",
+          "score": 0.131032
+        },
+        {
+          "rank": 4,
+          "source": "16-regulatory-change-management.md",
+          "section": "緊急変更",
+          "chunk_id": "16-regulatory-change-management-003",
+          "score": 0.123062
+        },
+        {
+          "rank": 5,
+          "source": "16-regulatory-change-management.md",
+          "section": "FAQ",
+          "chunk_id": "16-regulatory-change-management-004",
+          "score": 0.11621
+        }
+      ]
+    },
+    {
+      "id": "FIN-047",
+      "category": "regulatory_change",
+      "question": "緊急の規制変更は口頭連絡だけで対応できますか",
+      "answerable": true,
+      "expected_sources": [
+        "16-regulatory-change-management.md"
+      ],
+      "expected_keywords": [
+        "暫定手順",
+        "正式文書化"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.21113,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.889,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "16-regulatory-change-management.md",
+          "section": "緊急変更",
+          "chunk_id": "16-regulatory-change-management-003",
+          "score": 0.21113
+        },
+        {
+          "rank": 2,
+          "source": "09-loan-repayment-and-delinquency.md",
+          "section": "返済条件変更",
+          "chunk_id": "09-loan-repayment-and-delinquency-002",
+          "score": 0.059185
+        },
+        {
+          "rank": 3,
+          "source": "16-regulatory-change-management.md",
+          "section": "RAG ナレッジ更新",
+          "chunk_id": "16-regulatory-change-management-002",
+          "score": 0.055982
+        },
+        {
+          "rank": 4,
+          "source": "16-regulatory-change-management.md",
+          "section": "変更フロー",
+          "chunk_id": "16-regulatory-change-management-001",
+          "score": 0.052259
+        },
+        {
+          "rank": 5,
+          "source": "16-regulatory-change-management.md",
+          "section": "目的",
+          "chunk_id": "16-regulatory-change-management-000",
+          "score": 0.0498
+        }
+      ]
+    },
+    {
+      "id": "FIN-048",
+      "category": "regulatory_change",
+      "question": "当局ページの URL を登録すれば社内手順更新は不要ですか",
+      "answerable": true,
+      "expected_sources": [
+        "16-regulatory-change-management.md"
+      ],
+      "expected_keywords": [
+        "不要にはなりません",
+        "実行可能な社内手順"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.500664,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.919,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "16-regulatory-change-management.md",
+          "section": "FAQ",
+          "chunk_id": "16-regulatory-change-management-004",
+          "score": 0.500664
+        },
+        {
+          "rank": 2,
+          "source": "15-financial-product-suitability.md",
+          "section": "FAQ",
+          "chunk_id": "15-financial-product-suitability-004",
+          "score": 0.038332
+        },
+        {
+          "rank": 3,
+          "source": "16-regulatory-change-management.md",
+          "section": "目的",
+          "chunk_id": "16-regulatory-change-management-000",
+          "score": 0.036782
+        },
+        {
+          "rank": 4,
+          "source": "16-regulatory-change-management.md",
+          "section": "RAG ナレッジ更新",
+          "chunk_id": "16-regulatory-change-management-002",
+          "score": 0.029206
+        },
+        {
+          "rank": 5,
+          "source": "04-transfer-error-and-refund.md",
+          "section": "対応フロー",
+          "chunk_id": "04-transfer-error-and-refund-001",
+          "score": 0.02555
+        }
+      ]
+    },
+    {
+      "id": "FIN-049",
+      "category": "governance",
+      "question": "AI の回答だけで融資承認や取引停止を決定できますか",
+      "answerable": true,
+      "expected_sources": [
+        "00-knowledge-base-scope.md"
+      ],
+      "expected_keywords": [
+        "決定してはいけません",
+        "担当者"
+      ],
+      "predicted_answerable": true,
+      "top_score": 0.185522,
+      "expected_rank": 1,
+      "keyword_matches": 2,
+      "keyword_total": 2,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.869,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "00-knowledge-base-scope.md",
+          "section": "利用ルール",
+          "chunk_id": "00-knowledge-base-scope-002",
+          "score": 0.185522
+        },
+        {
+          "rank": 2,
+          "source": "15-financial-product-suitability.md",
+          "section": "禁止事項",
+          "chunk_id": "15-financial-product-suitability-002",
+          "score": 0.090927
+        },
+        {
+          "rank": 3,
+          "source": "08-loan-application-and-underwriting.md",
+          "section": "AI・モデル利用",
+          "chunk_id": "08-loan-application-and-underwriting-003",
+          "score": 0.059064
+        },
+        {
+          "rank": 4,
+          "source": "08-loan-application-and-underwriting.md",
+          "section": "審査フロー",
+          "chunk_id": "08-loan-application-and-underwriting-002",
+          "score": 0.04531
+        },
+        {
+          "rank": 5,
+          "source": "12-customer-complaints.md",
+          "section": "調査フロー",
+          "chunk_id": "12-customer-complaints-002",
+          "score": 0.029786
+        }
+      ]
+    },
+    {
+      "id": "FIN-050",
+      "category": "unanswerable_market",
+      "question": "今日の日経平均株価を教えてください",
+      "answerable": false,
+      "expected_sources": [],
+      "expected_keywords": [],
+      "predicted_answerable": false,
+      "top_score": 0.020247,
+      "expected_rank": null,
+      "keyword_matches": 0,
+      "keyword_total": 0,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.534,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "01-customer-onboarding-kyc.md",
+          "section": "目的",
+          "chunk_id": "01-customer-onboarding-kyc-000",
+          "score": 0.020247
+        }
+      ]
+    },
+    {
+      "id": "FIN-051",
+      "category": "unanswerable_market",
+      "question": "現在のドル円為替レートはいくらですか",
+      "answerable": false,
+      "expected_sources": [],
+      "expected_keywords": [],
+      "predicted_answerable": false,
+      "top_score": 0.028426,
+      "expected_rank": null,
+      "keyword_matches": 0,
+      "keyword_total": 0,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.609,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "05-aml-transaction-monitoring.md",
+          "section": "アラート処理",
+          "chunk_id": "05-aml-transaction-monitoring-002",
+          "score": 0.028426
+        },
+        {
+          "rank": 2,
+          "source": "06-suspicious-transaction-escalation.md",
+          "section": "一次調査",
+          "chunk_id": "06-suspicious-transaction-escalation-000",
+          "score": 0.027023
+        },
+        {
+          "rank": 3,
+          "source": "06-suspicious-transaction-escalation.md",
+          "section": "エスカレーション条件",
+          "chunk_id": "06-suspicious-transaction-escalation-001",
+          "score": 0.026468
+        },
+        {
+          "rank": 4,
+          "source": "06-suspicious-transaction-escalation.md",
+          "section": "情報管理",
+          "chunk_id": "06-suspicious-transaction-escalation-003",
+          "score": 0.02539
+        },
+        {
+          "rank": 5,
+          "source": "06-suspicious-transaction-escalation.md",
+          "section": "FAQ",
+          "chunk_id": "06-suspicious-transaction-escalation-004",
+          "score": 0.020706
+        }
+      ]
+    },
+    {
+      "id": "FIN-052",
+      "category": "unanswerable_advice",
+      "question": "今買うべき暗号資産を一つ推薦してください",
+      "answerable": false,
+      "expected_sources": [],
+      "expected_keywords": [],
+      "predicted_answerable": false,
+      "top_score": 0.016809,
+      "expected_rank": null,
+      "keyword_matches": 0,
+      "keyword_total": 0,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.572,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "01-customer-onboarding-kyc.md",
+          "section": "目的",
+          "chunk_id": "01-customer-onboarding-kyc-000",
+          "score": 0.016809
+        },
+        {
+          "rank": 2,
+          "source": "15-financial-product-suitability.md",
+          "section": "確認項目",
+          "chunk_id": "15-financial-product-suitability-001",
+          "score": 0.010267
+        },
+        {
+          "rank": 3,
+          "source": "15-financial-product-suitability.md",
+          "section": "顧客本位の基本",
+          "chunk_id": "15-financial-product-suitability-000",
+          "score": 0.010112
+        },
+        {
+          "rank": 4,
+          "source": "05-aml-transaction-monitoring.md",
+          "section": "主な検知観点",
+          "chunk_id": "05-aml-transaction-monitoring-001",
+          "score": 0.008439
+        }
+      ]
+    },
+    {
+      "id": "FIN-053",
+      "category": "unanswerable_tax",
+      "question": "今年の確定申告で使える医療費控除額を計算してください",
+      "answerable": false,
+      "expected_sources": [],
+      "expected_keywords": [],
+      "predicted_answerable": false,
+      "top_score": 0.014987,
+      "expected_rank": null,
+      "keyword_matches": 0,
+      "keyword_total": 0,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.688,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "03-domestic-transfer-operations.md",
+          "section": "受付時の確認",
+          "chunk_id": "03-domestic-transfer-operations-001",
+          "score": 0.014987
+        },
+        {
+          "rank": 2,
+          "source": "01-customer-onboarding-kyc.md",
+          "section": "法人顧客の確認項目",
+          "chunk_id": "01-customer-onboarding-kyc-002",
+          "score": 0.014711
+        },
+        {
+          "rank": 3,
+          "source": "01-customer-onboarding-kyc.md",
+          "section": "個人顧客の確認項目",
+          "chunk_id": "01-customer-onboarding-kyc-001",
+          "score": 0.014144
+        },
+        {
+          "rank": 4,
+          "source": "16-regulatory-change-management.md",
+          "section": "FAQ",
+          "chunk_id": "16-regulatory-change-management-004",
+          "score": 0.011303
+        },
+        {
+          "rank": 5,
+          "source": "12-customer-complaints.md",
+          "section": "禁止事項",
+          "chunk_id": "12-customer-complaints-003",
+          "score": 0.009258
+        }
+      ]
+    },
+    {
+      "id": "FIN-054",
+      "category": "unanswerable_insurance",
+      "question": "自動車保険の事故保険金はいくら受け取れますか",
+      "answerable": false,
+      "expected_sources": [],
+      "expected_keywords": [],
+      "predicted_answerable": false,
+      "top_score": 0.04172,
+      "expected_rank": null,
+      "keyword_matches": 0,
+      "keyword_total": 0,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.666,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "10-credit-risk-management.md",
+          "section": "早期警戒",
+          "chunk_id": "10-credit-risk-management-002",
+          "score": 0.04172
+        },
+        {
+          "rank": 2,
+          "source": "07-fraud-and-account-takeover.md",
+          "section": "FAQ",
+          "chunk_id": "07-fraud-and-account-takeover-004",
+          "score": 0.036391
+        },
+        {
+          "rank": 3,
+          "source": "14-business-continuity.md",
+          "section": "FAQ",
+          "chunk_id": "14-business-continuity-004",
+          "score": 0.021626
+        },
+        {
+          "rank": 4,
+          "source": "14-business-continuity.md",
+          "section": "復旧管理",
+          "chunk_id": "14-business-continuity-003",
+          "score": 0.020992
+        },
+        {
+          "rank": 5,
+          "source": "14-business-continuity.md",
+          "section": "発動判断",
+          "chunk_id": "14-business-continuity-001",
+          "score": 0.020769
+        }
+      ]
+    },
+    {
+      "id": "FIN-055",
+      "category": "unanswerable_pension",
+      "question": "私の年金受給開始年齢を教えてください",
+      "answerable": false,
+      "expected_sources": [],
+      "expected_keywords": [],
+      "predicted_answerable": false,
+      "top_score": 0.014227,
+      "expected_rank": null,
+      "keyword_matches": 0,
+      "keyword_total": 0,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.493,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "15-financial-product-suitability.md",
+          "section": "高齢者・支援が必要な顧客",
+          "chunk_id": "15-financial-product-suitability-003",
+          "score": 0.014227
+        },
+        {
+          "rank": 2,
+          "source": "02-account-opening-and-restrictions.md",
+          "section": "利用制限の原則",
+          "chunk_id": "02-account-opening-and-restrictions-002",
+          "score": 0.013641
+        },
+        {
+          "rank": 3,
+          "source": "01-customer-onboarding-kyc.md",
+          "section": "業務フロー",
+          "chunk_id": "01-customer-onboarding-kyc-003",
+          "score": 0.011578
+        }
+      ]
+    },
+    {
+      "id": "FIN-056",
+      "category": "unanswerable_product",
+      "question": "現在の住宅ローン固定金利は何パーセントですか",
+      "answerable": false,
+      "expected_sources": [],
+      "expected_keywords": [],
+      "predicted_answerable": false,
+      "top_score": 0.035942,
+      "expected_rank": null,
+      "keyword_matches": 0,
+      "keyword_total": 0,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.678,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "05-aml-transaction-monitoring.md",
+          "section": "目的",
+          "chunk_id": "05-aml-transaction-monitoring-000",
+          "score": 0.035942
+        },
+        {
+          "rank": 2,
+          "source": "00-knowledge-base-scope.md",
+          "section": "目的",
+          "chunk_id": "00-knowledge-base-scope-001",
+          "score": 0.02734
+        },
+        {
+          "rank": 3,
+          "source": "13-cybersecurity-incident-response.md",
+          "section": "FAQ",
+          "chunk_id": "13-cybersecurity-incident-response-004",
+          "score": 0.021096
+        },
+        {
+          "rank": 4,
+          "source": "13-cybersecurity-incident-response.md",
+          "section": "証跡保全",
+          "chunk_id": "13-cybersecurity-incident-response-003",
+          "score": 0.02047
+        },
+        {
+          "rank": 5,
+          "source": "13-cybersecurity-incident-response.md",
+          "section": "初動",
+          "chunk_id": "13-cybersecurity-incident-response-001",
+          "score": 0.018754
+        }
+      ]
+    },
+    {
+      "id": "FIN-057",
+      "category": "legacy_recruitment",
+      "question": "公開済みの求人を削除できますか",
+      "answerable": false,
+      "expected_sources": [],
+      "expected_keywords": [],
+      "predicted_answerable": false,
+      "top_score": 0.048374,
+      "expected_rank": null,
+      "keyword_matches": 0,
+      "keyword_total": 0,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.519,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "13-cybersecurity-incident-response.md",
+          "section": "FAQ",
+          "chunk_id": "13-cybersecurity-incident-response-004",
+          "score": 0.048374
+        },
+        {
+          "rank": 2,
+          "source": "04-transfer-error-and-refund.md",
+          "section": "対応フロー",
+          "chunk_id": "04-transfer-error-and-refund-001",
+          "score": 0.034864
+        },
+        {
+          "rank": 3,
+          "source": "11-personal-data-and-records.md",
+          "section": "取扱原則",
+          "chunk_id": "11-personal-data-and-records-001",
+          "score": 0.01818
+        },
+        {
+          "rank": 4,
+          "source": "07-fraud-and-account-takeover.md",
+          "section": "緊急対応",
+          "chunk_id": "07-fraud-and-account-takeover-001",
+          "score": 0.015679
+        },
+        {
+          "rank": 5,
+          "source": "11-personal-data-and-records.md",
+          "section": "情報分類",
+          "chunk_id": "11-personal-data-and-records-000",
+          "score": 0.015563
+        }
+      ]
+    },
+    {
+      "id": "FIN-058",
+      "category": "legacy_recruitment",
+      "question": "学校ユーザーのスタンダードプランではスカウトを何件送れますか",
+      "answerable": false,
+      "expected_sources": [],
+      "expected_keywords": [],
+      "predicted_answerable": false,
+      "top_score": 0.020387,
+      "expected_rank": null,
+      "keyword_matches": 0,
+      "keyword_total": 0,
+      "keyword_coverage": 1.0,
+      "latency_ms": 1.011,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "00-knowledge-base-scope.md",
+          "section": "利用ルール",
+          "chunk_id": "00-knowledge-base-scope-002",
+          "score": 0.020387
+        },
+        {
+          "rank": 2,
+          "source": "06-suspicious-transaction-escalation.md",
+          "section": "エスカレーション条件",
+          "chunk_id": "06-suspicious-transaction-escalation-001",
+          "score": 0.018826
+        },
+        {
+          "rank": 3,
+          "source": "00-knowledge-base-scope.md",
+          "section": "更新方針",
+          "chunk_id": "00-knowledge-base-scope-005",
+          "score": 0.015832
+        },
+        {
+          "rank": 4,
+          "source": "06-suspicious-transaction-escalation.md",
+          "section": "FAQ",
+          "chunk_id": "06-suspicious-transaction-escalation-004",
+          "score": 0.014996
+        },
+        {
+          "rank": 5,
+          "source": "06-suspicious-transaction-escalation.md",
+          "section": "情報管理",
+          "chunk_id": "06-suspicious-transaction-escalation-003",
+          "score": 0.014647
+        }
+      ]
+    },
+    {
+      "id": "FIN-059",
+      "category": "unanswerable_other",
+      "question": "量子宇宙船の燃料価格を教えてください",
+      "answerable": false,
+      "expected_sources": [],
+      "expected_keywords": [],
+      "predicted_answerable": false,
+      "top_score": 0.015986,
+      "expected_rank": null,
+      "keyword_matches": 0,
+      "keyword_total": 0,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.537,
+      "passed": true,
+      "top_results": [
+        {
+          "rank": 1,
+          "source": "15-financial-product-suitability.md",
+          "section": "確認項目",
+          "chunk_id": "15-financial-product-suitability-001",
+          "score": 0.015986
+        }
+      ]
+    },
+    {
+      "id": "FIN-060",
+      "category": "unanswerable_other",
+      "question": "明日の東京の天気を教えてください",
+      "answerable": false,
+      "expected_sources": [],
+      "expected_keywords": [],
+      "predicted_answerable": false,
+      "top_score": 0.0,
+      "expected_rank": null,
+      "keyword_matches": 0,
+      "keyword_total": 0,
+      "keyword_coverage": 1.0,
+      "latency_ms": 0.52,
+      "passed": true,
+      "top_results": []
+    }
+  ]
+}

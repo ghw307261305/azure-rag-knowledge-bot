@@ -1,7 +1,7 @@
 import { KeyboardEvent, useEffect, useRef, useState } from "react";
 
-import { ApiError, sendQuestion } from "./api";
-import type { Message } from "./types";
+import { ApiError, clearMemory, getMemory, sendQuestion } from "./api";
+import type { MemoryItem, Message } from "./types";
 
 // ── 会話セッション型 ────────────────────────────────────────
 interface Conversation {
@@ -12,17 +12,36 @@ interface Conversation {
 }
 
 const STORAGE_KEY = "rag_conversations";
+const CLIENT_ID_KEY = "rag_client_id";
 const MAX_HISTORY = 30;
+
+function sanitizeLocalHistoryText(value: string): string {
+  return value
+    .normalize("NFKC")
+    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "")
+    .replace(/[\u200b-\u200f\u2060\ufeff]/g, "")
+    .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, "[EMAIL]")
+    .replace(/(?<!\d)(?:\+81[- ]?|0)\d{1,4}[- ]?\d{1,4}[- ]?\d{3,4}(?!\d)/g, "[PHONE]")
+    .replace(/(?<!\d)〒?\d{3}-?\d{4}(?!\d)/g, "[POSTAL_CODE]")
+    .replace(/(?<!\d)\d{10,19}(?!\d)/g, "[LONG_NUMBER]");
+}
 
 function loadConversations(): Conversation[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as Conversation[];
-    return parsed.map((c) => ({
+    const sanitized = parsed.map((c) => ({
       ...c,
-      messages: c.messages.map((m) => ({ ...m, timestamp: new Date(m.timestamp) })),
+      messages: c.messages.map((m) => ({
+        ...m,
+        question: sanitizeLocalHistoryText(m.question),
+        answer: sanitizeLocalHistoryText(m.answer),
+        timestamp: new Date(m.timestamp)
+      })),
     }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized.slice(0, MAX_HISTORY)));
+    return sanitized;
   } catch {
     return [];
   }
@@ -37,10 +56,10 @@ function saveConversations(convs: Conversation[]) {
 }
 
 const SAMPLE_QUESTIONS = [
-  "パスワードリセットの有効期限は何分ですか？",
-  "P1 障害が発生した場合の目標復旧時間（RTO）は？",
-  "スタンダードプランのスカウト送信上限は月何件ですか？",
-  "面接をキャンセルする場合、どのような手順が必要ですか？",
+  "本人確認書類の住所と申込住所が異なる場合はどうしますか？",
+  "振込はいつまで取り消せますか？",
+  "AML アラートが出たら直ちに口座を凍結しますか？",
+  "返済が一度遅れた場合はどのように対応しますか？",
 ];
 
 // ── SVG アイコン ────────────────────────────────────────────
@@ -113,6 +132,14 @@ function generateId(): string {
   return `id-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+function getOrCreateClientId(): string {
+  const current = localStorage.getItem(CLIENT_ID_KEY);
+  if (current) return current;
+  const created = generateId();
+  localStorage.setItem(CLIENT_ID_KEY, created);
+  return created;
+}
+
 function getDisplayError(error: unknown): string {
   if (error instanceof ApiError) {
     return error.message;
@@ -134,6 +161,10 @@ export default function App() {
   const [error, setError] = useState("");
   const [showDev, setShowDev] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [showMemory, setShowMemory] = useState(false);
+  const [memoryItems, setMemoryItems] = useState<MemoryItem[]>([]);
+  const [memoryLoading, setMemoryLoading] = useState(false);
+  const [memoryError, setMemoryError] = useState("");
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -144,6 +175,7 @@ export default function App() {
   messagesRef.current = messages;
   // tracks the question currently being fetched (question state is cleared before request)
   const pendingQuestionRef = useRef("");
+  const clientIdRef = useRef(getOrCreateClientId());
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -158,16 +190,28 @@ export default function App() {
     setLoading(true);
     textareaRef.current?.focus();
     try {
-      const res = await sendQuestion(q);
+      const currentId = activeConvIdRef.current;
+      const requestConversationId = currentId ?? generateId();
+      const res = await sendQuestion(
+        q,
+        clientIdRef.current,
+        requestConversationId
+      );
       const newMsg = {
         id: generateId(),
-        question: q,
+        question: res.sanitized_question || q,
         answer: res.answer,
         citations: res.citations,
         retrieved_chunks: res.retrieved_chunks,
         latency_ms: res.latency_ms,
         rewritten_query: res.rewritten_query,
         token_usage: res.token_usage,
+        rag_mode: res.rag_mode,
+        model: res.model,
+        fallback_used: res.fallback_used,
+        sanitized_question: res.sanitized_question,
+        memory_usage: res.memory_usage,
+        generation_metrics: res.generation_metrics,
         timestamp: new Date(),
       };
 
@@ -179,8 +223,6 @@ export default function App() {
       const title =
         updatedMsgs[0].question.slice(0, 26) +
         (updatedMsgs[0].question.length > 26 ? "…" : "");
-      const currentId = activeConvIdRef.current;
-
       if (currentId) {
         setConversations((prev) => {
           const updated = prev.map((c) =>
@@ -190,12 +232,11 @@ export default function App() {
           return updated;
         });
       } else {
-        const newId = generateId();
-        activeConvIdRef.current = newId;
-        setActiveConvId(newId);
+        activeConvIdRef.current = requestConversationId;
+        setActiveConvId(requestConversationId);
         setConversations((prev) => {
           const updated = [
-            { id: newId, title, messages: updatedMsgs, createdAt: new Date().toISOString() },
+            { id: requestConversationId, title, messages: updatedMsgs, createdAt: new Date().toISOString() },
             ...prev,
           ];
           saveConversations(updated);
@@ -241,6 +282,37 @@ export default function App() {
     if (activeConvId === convId) {
       startNewConversation();
     }
+    void clearMemory(clientIdRef.current, convId).catch(() => {
+      setError("会話履歴は削除しましたが、サーバー側の記憶削除に失敗しました。");
+    });
+  }
+
+  async function openMemoryPanel() {
+    setShowMemory(true);
+    setMemoryLoading(true);
+    setMemoryError("");
+    try {
+      const response = await getMemory(clientIdRef.current);
+      setMemoryItems(response.items);
+    } catch (memoryLoadError) {
+      setMemoryError(getDisplayError(memoryLoadError));
+    } finally {
+      setMemoryLoading(false);
+    }
+  }
+
+  async function clearAllMemory() {
+    if (!window.confirm("保存済みの会話記憶をすべて削除しますか？")) return;
+    setMemoryLoading(true);
+    setMemoryError("");
+    try {
+      await clearMemory(clientIdRef.current);
+      setMemoryItems([]);
+    } catch (memoryClearError) {
+      setMemoryError(getDisplayError(memoryClearError));
+    } finally {
+      setMemoryLoading(false);
+    }
   }
 
   // Group conversations by date label
@@ -269,10 +341,18 @@ export default function App() {
             </svg>
           </button>
           <span className="navbar-logo"><BotIcon /></span>
-          <span className="navbar-title">ナレッジアシスタント</span>
+          <span className="navbar-title">金融ナレッジアシスタント</span>
         </div>
         <div className="navbar-right">
-          <span className="navbar-badge">Azure OpenAI × AI Search</span>
+          <span className="navbar-badge">Financial RAG PoC</span>
+          <button
+            type="button"
+            className={`dev-toggle ${showMemory ? "active" : ""}`}
+            onClick={openMemoryPanel}
+            title="治理済み会話記憶を確認"
+          >
+            Memory
+          </button>
           <button
             type="button"
             className={`dev-toggle ${showDev ? "active" : ""}`}
@@ -343,8 +423,8 @@ export default function App() {
               <div className="welcome-icon"><BotIcon /></div>
               <h2 className="welcome-title">何でもお聞きください</h2>
               <p className="welcome-desc">
-                社内ナレッジベースに登録された情報をもとに回答します。<br />
-                業務ルール・手順・仕様・FAQ など幅広くサポートします。
+                架空の金融機関向け社内ナレッジをもとに回答します。<br />
+                口座・振込・KYC/AML・融資・リスク・障害対応を検索できます。
               </p>
               <div className="suggestion-grid">
                 {SAMPLE_QUESTIONS.map((q) => (
@@ -375,6 +455,13 @@ export default function App() {
                       <p className="msg-answer">{msg.answer}</p>
                     </div>
 
+                    {msg.model && (
+                      <div className={`model-status ${msg.fallback_used ? "fallback" : ""}`}>
+                        <span>{msg.rag_mode} · {msg.model}</span>
+                        {msg.fallback_used && <span>原文回答へ安全に切替済み</span>}
+                      </div>
+                    )}
+
                     {/* 引用元ドキュメント */}
                     {msg.citations.length > 0 && (
                       <div className="citation-row">
@@ -395,6 +482,46 @@ export default function App() {
                         <dl className="dev-dl">
                           <dt>検索クエリ</dt>
                           <dd>{msg.rewritten_query || "—"}</dd>
+                          <dt>実行モード</dt>
+                          <dd>{msg.rag_mode || "—"}</dd>
+                          <dt>生成モデル</dt>
+                          <dd>{msg.model || "未使用"}</dd>
+                          <dt>フォールバック</dt>
+                          <dd>{msg.fallback_used ? "使用" : "未使用"}</dd>
+                          <dt>会話記憶</dt>
+                          <dd>
+                            {msg.memory_usage?.enabled
+                              ? `参照 ${msg.memory_usage.context_items} / 保存 ${msg.memory_usage.stored_items} / 破棄 ${msg.memory_usage.dropped_items}`
+                              : "未使用"}
+                          </dd>
+                          <dt>PII マスク</dt>
+                          <dd>{msg.memory_usage?.masked_pii.join(", ") || "なし"}</dd>
+                          <dt>生成コンテキスト</dt>
+                          <dd>
+                            {msg.generation_metrics
+                              ? `${msg.generation_metrics.context_chunks} chunks / ${msg.generation_metrics.context_characters} chars`
+                              : "—"}
+                          </dd>
+                          <dt>Ollama 段階時間</dt>
+                          <dd>
+                            {msg.generation_metrics
+                              ? `load ${msg.generation_metrics.model_load_ms.toFixed(0)} / prompt ${msg.generation_metrics.prompt_eval_ms.toFixed(0)} / generate ${msg.generation_metrics.generation_ms.toFixed(0)} ms`
+                              : "—"}
+                          </dd>
+                          <dt>生成速度</dt>
+                          <dd>
+                            {msg.generation_metrics?.generation_tokens_per_second
+                              ? `${msg.generation_metrics.generation_tokens_per_second.toFixed(2)} tokens/s`
+                              : "—"}
+                          </dd>
+                          <dt>回退理由</dt>
+                          <dd>{msg.generation_metrics?.fallback_reason || "なし"}</dd>
+                          <dt>根拠補完</dt>
+                          <dd>
+                            {msg.generation_metrics?.evidence_completion_used
+                              ? "あり"
+                              : "なし"}
+                          </dd>
                           <dt>レイテンシ</dt>
                           <dd>{msg.latency_ms} ms</dd>
                           <dt>トークン</dt>
@@ -469,7 +596,9 @@ export default function App() {
                 <SendIcon />
               </button>
             </div>
-            <p className="input-hint">Shift + Enter で改行</p>
+            <p className="input-hint">
+              Shift + Enter で改行 · PII は回答生成・保存前にマスクされ、記憶には残りません。
+            </p>
           </div>
         </div>
 
@@ -514,6 +643,55 @@ export default function App() {
           )}
         </aside>
       </div>
+
+      {showMemory && (
+        <div className="memory-overlay" role="presentation" onMouseDown={() => setShowMemory(false)}>
+          <section
+            className="memory-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-label="会話記憶"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className="memory-dialog-header">
+              <div>
+                <h2>会話記憶</h2>
+                <p>PII 清洗後の preference と明示的 fact のみ保存します。</p>
+              </div>
+              <button type="button" className="memory-close" onClick={() => setShowMemory(false)}>×</button>
+            </div>
+
+            {memoryLoading ? (
+              <p className="memory-empty">読み込み中…</p>
+            ) : memoryError ? (
+              <p className="memory-error">{memoryError}</p>
+            ) : memoryItems.length === 0 ? (
+              <p className="memory-empty">保存されている記憶はありません。</p>
+            ) : (
+              <div className="memory-list">
+                {memoryItems.map((item) => (
+                  <article key={item.id} className="memory-item">
+                    <div className="memory-item-meta">
+                      <span className={`memory-kind ${item.kind}`}>{item.kind}</span>
+                      <span>信頼度 {Math.round(item.confidence * 100)}%</span>
+                    </div>
+                    <strong>{item.key}</strong>
+                    <p>{item.value}</p>
+                    <small>有効期限 {new Date(item.expires_at).toLocaleDateString("ja-JP")}</small>
+                  </article>
+                ))}
+              </div>
+            )}
+
+            <div className="memory-dialog-actions">
+              <button type="button" className="memory-clear" onClick={clearAllMemory} disabled={memoryLoading || memoryItems.length === 0}>
+                すべての記憶を削除
+              </button>
+              <button type="button" className="memory-done" onClick={() => setShowMemory(false)}>閉じる</button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

@@ -494,6 +494,33 @@ button, textarea, input {
   white-space: pre-wrap;
 }
 
+.model-status {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  color: var(--brand-dark);
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+
+.model-status span {
+  padding: 3px 8px;
+  border: 1px solid #b9d8ee;
+  border-radius: 999px;
+  background: var(--brand-light);
+}
+
+.model-status.fallback {
+  color: #8a4b08;
+}
+
+.model-status.fallback span {
+  border-color: #edc58d;
+  background: #fff6e8;
+}
+
 /* ── 時刻 ────────────────────────────────────────────────── */
 .msg-time {
   font-size: 0.72rem;
@@ -844,6 +871,163 @@ button, textarea, input {
   line-height: 1.6;
 }
 
+/* ── 会話記憶ガバナンス ──────────────────────────────────── */
+.memory-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgb(15 23 42 / 42%);
+  backdrop-filter: blur(3px);
+}
+
+.memory-dialog {
+  width: min(620px, 100%);
+  max-height: min(720px, calc(100vh - 40px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  background: var(--surface);
+  box-shadow: 0 24px 64px rgb(15 23 42 / 22%);
+}
+
+.memory-dialog-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 22px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.memory-dialog-header h2 {
+  margin: 0 0 5px;
+  font-size: 1.05rem;
+}
+
+.memory-dialog-header p {
+  margin: 0;
+  color: var(--text-3);
+  font-size: 0.78rem;
+}
+
+.memory-close {
+  border: 0;
+  background: transparent;
+  color: var(--text-3);
+  font-size: 1.45rem;
+  cursor: pointer;
+}
+
+.memory-list {
+  display: grid;
+  gap: 10px;
+  padding: 16px 22px;
+  overflow-y: auto;
+}
+
+.memory-item {
+  padding: 13px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: #fbfdff;
+}
+
+.memory-item-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  color: var(--text-3);
+  font-size: 0.7rem;
+}
+
+.memory-kind {
+  padding: 2px 7px;
+  border-radius: 999px;
+  color: var(--brand-dark);
+  background: var(--brand-light);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.memory-kind.fact {
+  color: #704214;
+  background: #fff3d8;
+}
+
+.memory-item strong {
+  color: var(--text);
+  font-size: 0.8rem;
+}
+
+.memory-item p {
+  margin: 5px 0 8px;
+  color: var(--text-2);
+  font-size: 0.86rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.memory-item small {
+  color: var(--text-3);
+  font-size: 0.7rem;
+}
+
+.memory-empty,
+.memory-error {
+  margin: 0;
+  padding: 42px 22px;
+  color: var(--text-3);
+  text-align: center;
+}
+
+.memory-error {
+  color: #b42318;
+}
+
+.memory-dialog-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 14px 22px;
+  border-top: 1px solid var(--border);
+}
+
+.memory-clear,
+.memory-done {
+  padding: 8px 13px;
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.memory-clear {
+  margin-right: auto;
+  color: #b42318;
+  border-color: #f1b4af;
+  background: #fff7f6;
+}
+
+.memory-done {
+  color: white;
+  border-color: var(--brand);
+  background: var(--brand);
+}
+
+.memory-clear:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
 /* ── レスポンシブ ────────────────────────────────────────── */
 @media (max-width: 800px) {
   .ref-panel {
@@ -858,4 +1042,3 @@ button, textarea, input {
     display: none;
   }
 }
-

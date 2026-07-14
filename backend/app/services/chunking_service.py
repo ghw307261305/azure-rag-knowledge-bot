@@ -66,7 +66,7 @@ def _split_by_heading(text: str) -> List[tuple[str, str]]:
     sections = []
 
     # 最初の ## より前のテキスト
-    preamble = text[:headings[0].start()].strip()
+    preamble = _remove_document_title(text[:headings[0].start()]).strip()
     if preamble:
         sections.append(("概要", preamble))
 
@@ -79,3 +79,8 @@ def _split_by_heading(text: str) -> List[tuple[str, str]]:
         sections.append((section_name, content))
 
     return sections
+
+
+def _remove_document_title(text: str) -> str:
+    """先頭の H1 は title metadata と重複するため本文チャンクから除外する。"""
+    return re.sub(r"^#\s+.+$", "", text, count=1, flags=re.MULTILINE)

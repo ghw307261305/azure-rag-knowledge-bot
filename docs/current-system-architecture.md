@@ -7,6 +7,8 @@
 - FastAPI 后端 API
 - Azure OpenAI 查询改写、Embedding、答案生成
 - Azure AI Search Hybrid Search
+- Azure 非接続で動作するローカル Markdown 検索
+- Ollama / Gemma による完全ローカルの根拠付き回答生成
 - Markdown 知识文档切分与索引构建脚本
 - 本地会话历史保存与调试信息展示
 
@@ -25,6 +27,10 @@ flowchart LR
         main[main.py\nCORS + App Bootstrap]
         routes[routes.py\n/api/chat\n/api/health\n/api/search/debug\n/api/index/rebuild]
         rag[rag_service.py\nRAG Orchestrator]
+        factory[rag_service_factory.py\nMode Selection]
+        localSearch[local_search_service.py\nTF-IDF Retrieval]
+        localLlm[local_llm_rag_service.py\nGrounded Generation]
+        ollamaClient[ollama_service.py\nCitation Validation]
         openai[openai_service.py\nQuery Rewrite\nEmbedding\nAnswer Generation]
         search[search_service.py\nIndex / Upload / Hybrid Search]
         chunk[chunking_service.py\nMarkdown Chunking]
@@ -36,8 +42,12 @@ flowchart LR
         ais[Azure AI Search]
     end
 
+    subgraph LocalAI[Local AI Runtime]
+        ollama[Ollama\ngemma3:4b-it-qat]
+    end
+
     subgraph Knowledge[Knowledge Source]
-        docs[docs/knowledge/*.md]
+        docs[KNOWLEDGE_DIR/*.md]
         builder[scripts/build_index.py]
     end
 
@@ -46,7 +56,12 @@ flowchart LR
     app <--> localStore
     apiClient --> routes
     main --> routes
-    routes --> rag
+    routes --> factory
+    factory --> rag
+    factory --> localLlm
+    localLlm --> localSearch
+    localLlm --> ollamaClient
+    ollamaClient --> ollama
     routes --> search
     routes --> config
     rag --> openai
@@ -109,9 +124,20 @@ flowchart LR
 
 后端采用了比较清晰的“路由层 -> 服务层 -> 外部服务”结构，便于你在面试里强调职责分离和后续扩展性。
 
+### 2.3 RAG 执行模式
+
+当前由 `RAG_MODE` 选择四种实现，并保持相同的 `/api/chat` 响应模型：
+
+- `mock`：固定回答和固定引用，用于 UI 演示与自动测试。
+- `local`：读取 `KNOWLEDGE_DIR`（默认 `docs/knowledge-finance/*.md`），复用现有 Chunking，以字符 n-gram TF-IDF 排序，并返回最上位原文、真实 Citation 与 Fallback；不访问外网。
+- `local_llm`：复用 `local` 的检索结果，通过本机 Ollama 调用 `gemma3:4b-it-qat` 生成回答；回答必须含 `[S1]` 形式的有效引用，否则自动回退为检索原文。
+- `azure`：执行 Query Rewrite、Embedding、Azure AI Search Hybrid Search 和 Azure OpenAI 回答生成。
+
+`rag_service_factory.py` 负责模式选择，`local_search_service.py` 负责本地检索，`local_rag_service.py` 负责原文模式，`local_llm_rag_service.py` 与 `ollama_service.py` 负责本地生成、token 统计、引用校验和安全回退。
+
 ## 3. 在线问答链路
 
-当前 `/api/chat` 的主流程如下：
+以下是 `RAG_MODE=azure` 时 `/api/chat` 的完整生成链路；`local` 与 `local_llm` 会在工厂层切换到本地检索链路，其中 `local_llm` 再调用 Ollama/Gemma 生成回答。
 
 ```mermaid
 sequenceDiagram
@@ -166,6 +192,9 @@ sequenceDiagram
 - `latency_ms`
 - `rewritten_query`
 - `token_usage`
+- `rag_mode`
+- `model`
+- `fallback_used`
 
 这说明当前系统已经不再只是“问一句答一句”的最小 demo，而是具备了调试和可解释性字段。
 
@@ -175,7 +204,7 @@ sequenceDiagram
 
 ```mermaid
 flowchart TD
-    md[docs/knowledge/*.md]
+    md[KNOWLEDGE_DIR/*.md]
     script[scripts/build_index.py]
     chunk[chunking_service.load_and_chunk]
     embed[openai_service.get_embedding]
@@ -194,7 +223,7 @@ flowchart TD
 
 ### 4.1 索引流程说明
 
-1. `scripts/build_index.py` 读取 `docs/knowledge/` 下的 Markdown 文档
+1. `scripts/build_index.py` 读取 `KNOWLEDGE_DIR` 下的 Markdown 文档
 2. `chunking_service.py` 以 `##` 二级标题为边界进行分块
 3. 每个 chunk 生成：
    - `chunk_id`
@@ -240,7 +269,7 @@ flowchart TD
 - 前端依赖后端 API
 - 后端依赖 Azure OpenAI
 - 后端依赖 Azure AI Search
-- 索引构建脚本依赖 `docs/knowledge/*.md`
+- 索引构建脚本依赖 `KNOWLEDGE_DIR` 下的 Markdown 文档
 
 ## 6. 当前系统的非功能特征
 
@@ -254,6 +283,10 @@ flowchart TD
 - 引用来源展示
 - 索引构建脚本独立
 - API 测试存在
+- P2 检索质量门槛与 P4 生成质量门槛可在本地重复执行
+- P5 会话记忆在本地执行 PII 清洗、类型分离、可信度和 TTL 治理
+- P6 对本地生成记录工程耗时、tokens/s、回退原因，并提供 CPU、内存和 Ollama 常驻状态快照
+- 对过早结束的短回答，从已检索原文确定性补充一条未覆盖证据，并单独记录 `evidence_completion_used`
 
 ### 6.2 当前限制
 
@@ -261,8 +294,9 @@ flowchart TD
 - Azure 服务访问仍以 API Key 为主
 - prompt injection 防护还只是基础关键字检查
 - chunking 规则较简单，目前按二级标题切分
-- 没有完整的 observability，如 tracing、metrics、dashboard
-- 会话历史只保存在浏览器，不做服务端持久化
+- 已有开发用进程内 metrics 和资源快照，但尚未接入持久化 tracing、时序数据库与 dashboard
+- 原始会话历史只保存在浏览器；服务端仅持久化清洗后的结构化 preference / fact
+- 会话记忆 SQLite 尚未加密，匿名 client_id 不是正式身份认证边界
 
 ## 7. 面试时可用的架构总结
 
@@ -281,10 +315,23 @@ flowchart TD
 - 后端入口：`backend/main.py`
 - API 路由：`backend/app/api/routes.py`
 - RAG 编排：`backend/app/services/rag_service.py`
+- RAG 模式选择：`backend/app/services/rag_service_factory.py`
+- 本地检索：`backend/app/services/local_search_service.py`
+- 本地回答组装：`backend/app/services/local_rag_service.py`
+- 本地 Gemma 回答：`backend/app/services/local_llm_rag_service.py`
+- Ollama 调用与引用校验：`backend/app/services/ollama_service.py`
+- 生成质量评估：`backend/app/evaluation/generation_evaluator.py`
+- P4 评估脚本：`backend/scripts/evaluate_local_generation.py`
+- 会话记忆治理：`backend/app/services/conversation_memory_service.py`
+- 会话记忆模型：`backend/app/models/memory.py`
 - Azure OpenAI：`backend/app/services/openai_service.py`
 - Azure AI Search：`backend/app/services/search_service.py`
 - Chunking：`backend/app/services/chunking_service.py`
 - 索引脚本：`backend/scripts/build_index.py`
 - 认证设计补充：`docs/auth-design.md`
 - 设计取舍补充：`docs/design-decisions.md`
-
+- P4 生成评估说明：`docs/generation-evaluation.md`
+- P5 会话记忆治理：`docs/conversation-memory-governance.md`
+- P6 性能与可观测性：`docs/performance-observability.md`
+- 性能采集服务：`backend/app/services/observability_service.py`
+- 本地性能基准：`backend/scripts/benchmark_local_llm.py`
