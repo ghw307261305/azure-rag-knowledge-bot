@@ -1,3 +1,5 @@
+"""FastAPI アプリの初期化、共通ミドルウェア、ルーター登録を行うエントリーポイント。"""
+
 import os
 import logging
 import time
@@ -43,6 +45,8 @@ app.add_middleware(
 
 @app.middleware("http")
 async def request_context(request, call_next):
+    """リクエスト ID と処理時間を、レスポンスと構造化ログの両方に関連付ける。"""
+    # 呼び出し元の ID を引き継ぐことで、フロントエンドからバックエンドまで追跡できる。
     request_id = request.headers.get("X-Request-ID", "").strip() or str(uuid.uuid4())
     token = set_request_id(request_id[:128])
     started_at = time.perf_counter()
@@ -53,6 +57,7 @@ async def request_context(request, call_next):
         response.headers["X-Request-ID"] = request_id[:128]
         return response
     finally:
+        # 例外時にも必ず完了ログを残し、ContextVar を次のリクエストへ漏らさない。
         logger.info(
             "HTTP request completed",
             extra={

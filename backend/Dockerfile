@@ -1,3 +1,4 @@
+# 軽量な Python 実行環境へ API と必要な依存だけを配置する。
 FROM python:3.11-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1 \

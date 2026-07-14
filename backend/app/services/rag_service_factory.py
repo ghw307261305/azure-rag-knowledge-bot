@@ -1,3 +1,5 @@
+"""設定された実行モードを、共通の RAG サービス契約へ変換する。"""
+
 from functools import lru_cache
 from typing import Protocol
 
@@ -10,6 +12,7 @@ from app.services.mock_rag_service import MockRagService
 
 
 class RagService(Protocol):
+    """API 層が実装方式を意識せず回答を取得するための最小契約。"""
     def answer(
         self,
         question: str,
@@ -20,7 +23,7 @@ class RagService(Protocol):
 
 
 class AzureRagService:
-    """Adapter for the existing Azure-backed RAG orchestration module."""
+    """既存の Azure RAG 関数を共通サービス契約へ合わせるアダプター。"""
 
     def answer(
         self,
@@ -34,6 +37,7 @@ class AzureRagService:
 
 @lru_cache
 def get_rag_service() -> RagService:
+    """RAG_MODE に対応する実装をプロセス内で一度だけ生成する。"""
     mode = get_settings().rag_mode
     if mode == "mock":
         return MockRagService()

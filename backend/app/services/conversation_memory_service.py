@@ -47,6 +47,7 @@ POISON_PATTERNS = (
 
 @dataclass(frozen=True)
 class SanitizationResult:
+    """安全化した本文と、マスク・除去した内容の監査情報。"""
     text: str
     masked_pii: tuple[str, ...]
     dirty_events: tuple[str, ...]
@@ -54,6 +55,7 @@ class SanitizationResult:
 
 @dataclass(frozen=True)
 class MemoryPreparation:
+    """RAG 呼び出し前に必要な、安全化済み質問と許可済み記憶。"""
     sanitized_question: str
     memory_context: str
     context_items: int
@@ -64,6 +66,7 @@ class MemoryPreparation:
 
 @dataclass(frozen=True)
 class MemoryCandidate:
+    """保存前の preference/fact 候補。信頼度と抽出元も保持する。"""
     kind: str
     key: str
     value: str
@@ -72,6 +75,7 @@ class MemoryCandidate:
 
 
 class ConversationMemoryService:
+    """PII、TTL、所有者境界を強制する SQLite ベースの会話記憶。"""
     def __init__(
         self,
         db_path: Path,
@@ -98,6 +102,7 @@ class ConversationMemoryService:
         question: str,
         enabled_for_request: bool = True,
     ) -> MemoryPreparation:
+        """質問を安全化し、保存候補の審査と既存記憶の読込を一括実行する。"""
         sanitized = sanitize_text(question)
         if (
             not self.enabled
@@ -117,10 +122,12 @@ class ConversationMemoryService:
         self.cleanup_expired()
         candidates = extract_memory_candidates(sanitized.text)
         dropped_items = len(sanitized.dirty_events)
+        # 指示上書きが疑われる入力は質問には使えても、長期記憶には保存しない。
         if _contains_memory_poisoning(sanitized.text):
             dropped_items += max(1, len(candidates))
             candidates = []
         if sanitized.masked_pii:
+            # マスク記号を含む候補は、復元不能でも機微情報由来なので保存しない。
             safe_candidates = [
                 candidate
                 for candidate in candidates
@@ -142,6 +149,7 @@ class ConversationMemoryService:
         )
 
     def list_items(self, client_id: str) -> list[MemoryItem]:
+        """有効な記憶を preference 優先、信頼度順で上限件数まで返す。"""
         if not self.enabled:
             return []
         now = _utc_now().isoformat()
@@ -242,6 +250,7 @@ class ConversationMemoryService:
     def _upsert(
         self, client_id: str, conversation_id: str, candidate: MemoryCandidate
     ) -> None:
+        """同じ意味キーを更新し、種別ごとの TTL を最終確認時点から延長する。"""
         now = _utc_now()
         ttl_days = (
             self.preference_ttl_days
@@ -288,6 +297,7 @@ class ConversationMemoryService:
 
 
 def sanitize_text(text: str) -> SanitizationResult:
+    """制御文字や過剰入力を整形し、既知の PII を不可逆なラベルへ置換する。"""
     value = unicodedata.normalize("NFKC", text)
     value = ZERO_WIDTH_PATTERN.sub("", value)
     value = CONTROL_PATTERN.sub("", value)
@@ -320,6 +330,7 @@ def sanitize_text(text: str) -> SanitizationResult:
 
 
 def extract_memory_candidates(text: str) -> list[MemoryCandidate]:
+    """明示された言語・回答形式・remember 指示だけを保存候補として抽出する。"""
     candidates: list[MemoryCandidate] = []
     lower = text.lower()
     language_patterns = (
@@ -369,6 +380,7 @@ def extract_memory_candidates(text: str) -> list[MemoryCandidate]:
 
 
 def build_memory_context(items: list[MemoryItem]) -> str:
+    """モデルが通常の会話と区別できる、閉じた記憶ブロックへ整形する。"""
     if not items:
         return ""
     lines = ["<governed_memory>"]

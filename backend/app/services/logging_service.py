@@ -23,6 +23,7 @@ def get_request_id() -> str:
 
 
 class JsonFormatter(logging.Formatter):
+    """本文を記録せず、相関 ID と許可済み属性だけを JSON 化する。"""
     def format(self, record: logging.LogRecord) -> str:
         payload = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -40,6 +41,7 @@ class JsonFormatter(logging.Formatter):
 
 
 def configure_logging(*, level: str, json_logs: bool) -> None:
+    """既存ハンドラーを尊重しつつ、必要な場合だけ JSON 形式へ切り替える。"""
     root = logging.getLogger()
     root.setLevel(level.upper())
     if not root.handlers:

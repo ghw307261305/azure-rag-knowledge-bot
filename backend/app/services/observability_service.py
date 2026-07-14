@@ -17,11 +17,13 @@ from app.services.config import get_settings
 
 
 class ObservabilityService:
+    """外部監視がなくても PoC の品質と性能を確認できる固定長メトリクス。"""
     def __init__(self, max_samples: int = 500) -> None:
         self._samples: deque[dict[str, Any]] = deque(maxlen=max_samples)
         self._lock = threading.Lock()
 
     def record(self, response: ChatResponse) -> None:
+        """個人データや本文を保存せず、集計に必要な数値と分類だけを記録する。"""
         metrics = response.generation_metrics
         sample = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
@@ -51,6 +53,7 @@ class ObservabilityService:
         return count
 
     def summary(self) -> dict[str, Any]:
+        """スナップショットを取得し、ロック外で率・平均・P95 を集計する。"""
         with self._lock:
             samples = list(self._samples)
         latencies = sorted(float(sample["latency_ms"]) for sample in samples)
@@ -96,6 +99,7 @@ class ObservabilityService:
         }
 
     def resource_snapshot(self) -> dict[str, Any]:
+        """ローカル運用の診断用にプロセスと Ollama の資源情報を返す。"""
         process = psutil.Process()
         memory = psutil.virtual_memory()
         ollama_processes = []
@@ -142,6 +146,7 @@ class ObservabilityService:
         }
 
     def prometheus_text(self) -> str:
+        """高カーディナリティな ID を含めず、集計値だけを Prometheus 形式にする。"""
         summary = self.summary()
         metrics = [
             "# HELP rag_chat_samples_total Number of chat samples retained by this process.",

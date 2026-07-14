@@ -1,3 +1,4 @@
+// チャット UI、会話履歴、会話記憶の操作をまとめる画面コンポーネント。
 import { KeyboardEvent, useEffect, useRef, useState } from "react";
 
 import {
@@ -24,6 +25,7 @@ const MEMORY_PREFERENCE_KEY = "rag_memory_enabled";
 const MAX_HISTORY = 30;
 
 function sanitizeLocalHistoryText(value: string): string {
+  // サーバーと同じ主要 PII を、ブラウザへ履歴保存する前にも防御的にマスクする。
   return value
     .normalize("NFKC")
     .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "")
@@ -35,10 +37,12 @@ function sanitizeLocalHistoryText(value: string): string {
 }
 
 function loadConversations(): Conversation[] {
+  // 保存形式の破損で画面全体が起動不能にならないよう、読込失敗は空履歴へ戻す。
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as Conversation[];
+    // 過去バージョンの未マスク履歴も、読み込んだ時点で再保存して安全化する。
     const sanitized = parsed.map((c) => ({
       ...c,
       messages: c.messages.map((m) => ({
@@ -56,10 +60,11 @@ function loadConversations(): Conversation[] {
 }
 
 function saveConversations(convs: Conversation[]) {
+  // localStorage の肥大化を避けるため、新しい会話から最大件数だけ保存する。
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(convs.slice(0, MAX_HISTORY)));
   } catch {
-    // ignore quota errors
+    // 容量超過時もチャット自体は継続できるため、保存失敗は UI を止めない。
   }
 }
 
@@ -117,6 +122,7 @@ function formatDate(isoString: string): string {
 }
 
 function generateId(): string {
+  // 対応ブラウザでは標準 UUID を使い、段階的に安全な代替手段へ降格する。
   const cryptoApi = globalThis.crypto;
   if (cryptoApi?.randomUUID) {
     return cryptoApi.randomUUID();
@@ -141,6 +147,7 @@ function generateId(): string {
 }
 
 function getOrCreateClientId(): string {
+  // 匿名利用でも、会話記憶の所有者境界として安定したブラウザ ID が必要。
   const current = localStorage.getItem(CLIENT_ID_KEY);
   if (current) return current;
   const created = generateId();
@@ -165,6 +172,7 @@ function getDisplayError(error: unknown): string {
 }
 
 export default function App() {
+  // conversations は保存済み全会話、messages は現在開いている会話の表示状態。
   const [conversations, setConversations] = useState<Conversation[]>(loadConversations);
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -181,12 +189,12 @@ export default function App() {
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  // refs to avoid stale closures in async callbacks
+  // 非同期 API 完了時に古い state を参照しないよう、最新値を ref に同期する。
   const activeConvIdRef = useRef<string | null>(null);
   activeConvIdRef.current = activeConvId;
   const messagesRef = useRef<Message[]>([]);
   messagesRef.current = messages;
-  // tracks the question currently being fetched (question state is cleared before request)
+  // 入力欄を先に空にしても送信中の質問を表示できるよう、別 ref で保持する。
   const pendingQuestionRef = useRef("");
   const clientIdRef = useRef(getOrCreateClientId());
 
@@ -195,6 +203,7 @@ export default function App() {
   }, [messages, loading]);
 
   async function handleSubmit() {
+    // 二重送信を防ぎ、送信開始時点の質問と会話 ID を一つのリクエストに固定する。
     const q = question.trim();
     if (!q || loading) return;
     pendingQuestionRef.current = q;
@@ -230,11 +239,11 @@ export default function App() {
         timestamp: new Date(),
       };
 
-      // Compute updated messages using ref (safe against stale closure)
+      // ref の最新メッセージを使い、待機中に切り替わった state の取りこぼしを防ぐ。
       const updatedMsgs = [...messagesRef.current, newMsg];
       setMessages(updatedMsgs);
 
-      // Persist conversation — no nested setState calls
+      // 初回回答時だけ会話を作り、以降は同じ ID の履歴を更新する。
       const title =
         updatedMsgs[0].question.slice(0, 26) +
         (updatedMsgs[0].question.length > 26 ? "…" : "");
@@ -288,6 +297,7 @@ export default function App() {
   }
 
   function deleteConversation(e: React.MouseEvent, convId: string) {
+    // クリックが親の「会話を開く」操作へ伝播しないよう先に止める。
     e.stopPropagation();
     setConversations((prev) => {
       const updated = prev.filter((c) => c.id !== convId);
@@ -297,12 +307,14 @@ export default function App() {
     if (activeConvId === convId) {
       startNewConversation();
     }
+    // ブラウザ履歴とサーバー記憶は別保存先なので、後者も明示的に削除する。
     void clearMemory(clientIdRef.current, convId).catch(() => {
       setError("会話履歴は削除しましたが、サーバー側の記憶削除に失敗しました。");
     });
   }
 
   async function openMemoryPanel() {
+    // パネルは先に開き、取得中・失敗状態をダイアログ内で表示する。
     setShowMemory(true);
     setMemoryLoading(true);
     setMemoryError("");
@@ -331,6 +343,7 @@ export default function App() {
   }
 
   function toggleMemory() {
+    // 選択は次回起動後も維持するが、既に保存された記憶の削除は別操作とする。
     setMemoryEnabled((current) => {
       const next = !current;
       localStorage.setItem(MEMORY_PREFERENCE_KEY, String(next));
@@ -355,6 +368,7 @@ export default function App() {
     message: Message,
     rating: "helpful" | "unhelpful"
   ) {
+    // request_id がない旧履歴や、保存先会話が未確定の回答は送信対象外。
     if (!message.request_id || !activeConvIdRef.current) return;
     const reason = rating === "unhelpful"
       ? window.prompt("改善してほしい点があれば入力してください（任意）", "") ?? ""
@@ -385,7 +399,7 @@ export default function App() {
     }
   }
 
-  // Group conversations by date label
+  // 履歴の並び順を保ったまま、表示上の日付ラベルだけでグループ化する。
   const groupedConvs = conversations.reduce<Record<string, Conversation[]>>((acc, c) => {
     const label = formatDate(c.createdAt);
     (acc[label] ??= []).push(c);

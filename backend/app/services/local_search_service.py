@@ -28,6 +28,7 @@ COMMON_QUERY_PHRASES = (
 
 @dataclass(frozen=True)
 class _IndexedChunk:
+    """検索時の再計算を避けるため、チャンクと TF-IDF 特徴量を保持する。"""
     chunk: Chunk
     weights: dict[str, float]
     norm: float
@@ -39,6 +40,7 @@ class _IndexedChunk:
 
 
 class LocalSearchService:
+    """Markdown をプロセス内インデックス化し、アクセス制御付きで検索する。"""
     """文字 n-gram TF-IDF で日本語 Markdown をインメモリ検索する。"""
 
     def __init__(self, knowledge_dir: Path | None = None) -> None:
@@ -54,12 +56,14 @@ class LocalSearchService:
             return len(self._documents)
 
     def rebuild(self) -> int:
+        """文書、ACL、TF-IDF 統計を一つのロック内で整合的に再構築する。"""
         access_control = _load_access_control(self.knowledge_dir)
         chunks: list[Chunk] = []
         for file_path in sorted(self.knowledge_dir.glob("*.md")):
             chunks.extend(load_and_chunk(file_path))
 
         term_counts: list[Counter[str]] = []
+        # IDF は文書全体で計算し、頻出語が順位を過度に支配しないようにする。
         document_frequency: Counter[str] = Counter()
         for chunk in chunks:
             searchable_text = (
@@ -106,6 +110,7 @@ class LocalSearchService:
         *,
         allowed_groups: set[str] | None = None,
     ) -> list[dict]:
+        """ACL を先に適用し、本文・タイトル・見出しの関連度を合成して返す。"""
         if top_k <= 0:
             return []
 
@@ -140,6 +145,7 @@ class LocalSearchService:
             cosine_score = dot_product / (query_norm * document.norm)
             title_score = _dice_overlap(query_terms, document.title_terms)
             section_score = _dice_overlap(query_terms, document.section_terms)
+            # 本文 cosine を主成分とし、タイトルと見出しの一致を軽く加点する。
             score = min(
                 1.0,
                 cosine_score + (0.25 * title_score) + (0.10 * section_score),
@@ -165,6 +171,7 @@ class LocalSearchService:
 
 
 def _load_access_control(knowledge_dir: Path) -> dict:
+    """ACL ファイルがない場合は、PoC 互換の全公開設定として扱う。"""
     metadata_path = knowledge_dir / "access-control.json"
     if not metadata_path.exists():
         return {"default": {"allowed_groups": ["*"]}, "documents": {}}
@@ -192,6 +199,7 @@ def _document_access_metadata(access_control: dict, source: str) -> dict:
 def _can_access(
     document_groups: frozenset[str], allowed_groups: set[str] | None
 ) -> bool:
+    """呼び出し側または文書側のワイルドカードを含むグループ交差を判定する。"""
     if allowed_groups is None or "*" in allowed_groups or "*" in document_groups:
         return True
     return bool(document_groups & allowed_groups)
@@ -213,6 +221,7 @@ def _dice_overlap(left: frozenset[str], right: frozenset[str]) -> float:
 
 
 def _extract_terms(text: str) -> list[str]:
+    """日本語のような分かち書きのない文も扱えるよう 2/3-gram へ分解する。"""
     normalized = unicodedata.normalize("NFKC", text).lower()
     for phrase in COMMON_QUERY_PHRASES:
         normalized = normalized.replace(phrase, "")

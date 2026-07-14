@@ -33,6 +33,7 @@ class LocalLlmRagService:
         memory_context: str = "",
         access_groups: set[str] | None = None,
     ) -> ChatResponse:
+        """ローカル検索、文脈絞り込み、Ollama 生成、安全な降格を順に実行する。"""
         started_at = time.perf_counter()
         settings = get_settings()
         results = get_local_search_service().search(
@@ -58,6 +59,7 @@ class LocalLlmRagService:
                 ),
             )
 
+        # 小型モデルへ渡す量を制限し、最上位から大きく劣る根拠は除外する。
         context_limit = min(settings.max_chunks, settings.ollama_context_chunks)
         context_chunks = [
             chunk
@@ -77,6 +79,7 @@ class LocalLlmRagService:
             answer, completion_used = _complete_short_answer(answer, context_chunks)
             generation_metrics.evidence_completion_used = completion_used
         except OllamaError as exc:
+            # 生成障害を API 全体の障害にせず、検索済み原文へ安全に降格する。
             logger.warning("Local generation failed; using extractive fallback: %s", exc)
             answer = _build_extractive_answer(
                 context_chunks[0], generation_failed=True
@@ -112,6 +115,7 @@ class LocalLlmRagService:
 
 
 def _build_numbered_citations(chunks: list[dict]) -> list[Citation]:
+    """プロンプト内の S 番号と API の引用順序を一致させる。"""
     return [
         Citation(
             title=f"[S{index}] {chunk['source']} / {chunk['section']}",
@@ -123,7 +127,7 @@ def _build_numbered_citations(chunks: list[dict]) -> list[Citation]:
 
 
 def _complete_short_answer(answer: str, chunks: list[dict]) -> tuple[str, bool]:
-    """Append one exact evidence sentence when a small model stops too early."""
+    """小型モデルの回答が短すぎる場合だけ、根拠から一文を補完する。"""
     plain_answer = re.sub(r"\[S\d+\]", "", answer).strip()
     sentences = [
         part.strip()
@@ -161,6 +165,7 @@ def _complete_short_answer(answer: str, chunks: list[dict]) -> tuple[str, bool]:
 
 
 def _bigram_similarity(left: str, right: str) -> float:
+    """補完文が既存回答の言い換えだけにならないよう文字 bigram で比較する。"""
     def bigrams(value: str) -> set[str]:
         normalized = re.sub(r"\s+", "", value).lower()
         return {normalized[index : index + 2] for index in range(len(normalized) - 1)}

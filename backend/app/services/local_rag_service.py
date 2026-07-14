@@ -22,6 +22,7 @@ class LocalRagService:
         memory_context: str = "",
         access_groups: set[str] | None = None,
     ) -> ChatResponse:
+        """検索閾値を満たす根拠を返し、生成を行わない検証用モードを実装する。"""
         started_at = time.perf_counter()
         settings = get_settings()
         results = get_local_search_service().search(
@@ -31,6 +32,7 @@ class LocalRagService:
         )
         top_score = results[0]["score"] if results else 0.0
 
+        # 関連度が不足する場合は原文すら返さず、誤回答を避ける。
         if not results or top_score < settings.local_min_score:
             return ChatResponse(
                 answer=LOCAL_FALLBACK_ANSWER,
@@ -72,6 +74,7 @@ class LocalRagService:
 
 
 def _build_citations(chunks: list[dict]) -> list[Citation]:
+    """同じファイルの複数チャンクを、利用者向け引用では一件にまとめる。"""
     citations: list[Citation] = []
     seen_sources: set[str] = set()
     for chunk in chunks:
@@ -89,6 +92,7 @@ def _build_citations(chunks: list[dict]) -> list[Citation]:
 
 
 def _build_retrieved_chunks(chunks: list[dict]) -> list[RetrievedChunk]:
+    """検索デバッグ用に、順位付けされた全チャンクを軽量な形式へ変換する。"""
     return [
         RetrievedChunk(
             chunk_id=chunk["chunk_id"],
@@ -101,6 +105,7 @@ def _build_retrieved_chunks(chunks: list[dict]) -> list[RetrievedChunk]:
 
 
 def _build_extractive_answer(top_chunk: dict, *, generation_failed: bool = False) -> str:
+    """モデル障害時にも根拠を失わないよう、最上位チャンクを原文で返す。"""
     if generation_failed:
         prefix = (
             "ローカル生成モデルを利用できないため、安全のため検索結果の原文に切り替えました。"

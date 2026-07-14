@@ -1,3 +1,5 @@
+"""環境変数を型付き設定へ集約し、起動前にモード別の必須値を検証する。"""
+
 import os
 from dataclasses import dataclass
 from functools import lru_cache
@@ -11,6 +13,7 @@ load_dotenv(PROJECT_ROOT / ".env")
 
 @dataclass(frozen=True)
 class Settings:
+    """アプリ全体で共有する不変の実行時設定。"""
     app_env: str
     rag_mode: str
     log_level: str
@@ -73,6 +76,7 @@ def _get_auth_mode() -> str:
 
 
 def validate_settings(settings: Settings) -> None:
+    """選択した機能で実際に必要な設定だけを検証し、早期に失敗させる。"""
     """Fail fast when the selected runtime mode cannot be started safely."""
     if settings.rag_mode in {"local", "local_llm"}:
         knowledge_path = Path(settings.knowledge_dir)
@@ -105,6 +109,7 @@ def validate_settings(settings: Settings) -> None:
 
 @lru_cache
 def get_settings() -> Settings:
+    """環境変数の読み取り結果をキャッシュし、各サービスへ同じ設定を返す。"""
     return Settings(
         app_env=os.getenv("APP_ENV", "local"),
         rag_mode=_get_rag_mode(),

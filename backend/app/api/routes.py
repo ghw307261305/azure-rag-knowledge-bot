@@ -1,3 +1,5 @@
+"""HTTP 入出力をサービス層へ橋渡しする API ルーター。"""
+
 import logging
 import time
 
@@ -33,6 +35,7 @@ logger = logging.getLogger(__name__)
 
 @router.get("/health")
 def health() -> dict:
+    """現在の RAG モードと、ローカル実行時の準備状況を返す。"""
     settings = get_settings()
     result = {
         "status": "ok",
@@ -54,7 +57,7 @@ def chat(
     request: ChatRequest,
     principal: Principal = Depends(get_current_principal),
 ) -> ChatResponse:
-    """RAGによる質問回答エンドポイント"""
+    """入力を安全化し、記憶の準備後に選択中の RAG サービスへ回答を委譲する。"""
     # 基本的なprompt injection防護
     if _is_suspicious(request.question):
         raise HTTPException(status_code=400, detail="不正なリクエストが検出されました")
@@ -63,6 +66,7 @@ def chat(
         effective_client_id = _resolve_memory_client_id(
             request.client_id, principal, required=False
         )
+        # PII マスクと記憶候補の抽出は、検索・生成より前に一度だけ行う。
         preparation = memory_service.prepare(
             client_id=effective_client_id,
             conversation_id=request.conversation_id,
@@ -71,6 +75,7 @@ def chat(
         )
         if not preparation.sanitized_question:
             raise HTTPException(status_code=400, detail="有効な質問がありません")
+        # ファクトリが mock/local/local_llm/azure の差を吸収する。
         response = get_rag_service().answer(
             preparation.sanitized_question,
             memory_context=preparation.memory_context,
@@ -104,6 +109,7 @@ def submit_feedback(
     request: FeedbackRequest,
     principal: Principal = Depends(get_current_principal),
 ) -> FeedbackResponse:
+    """回答単位の評価を、認証主体または匿名クライアントに紐付けて保存する。"""
     client_id = _resolve_memory_client_id(request.client_id, principal)
     get_feedback_service().store(
         client_id=client_id,
@@ -122,6 +128,7 @@ def list_memory(
     ),
     principal: Principal = Depends(get_current_principal),
 ) -> MemoryListResponse:
+    """呼び出し主体が所有する、有効期限内の会話記憶だけを返す。"""
     client_id = _resolve_memory_client_id(client_id, principal)
     service = get_conversation_memory_service()
     items = service.list_items(client_id)
@@ -143,6 +150,7 @@ def delete_memory(
     ),
     principal: Principal = Depends(get_current_principal),
 ) -> MemoryDeleteResponse:
+    """クライアント全体、または指定した会話に属する記憶を削除する。"""
     client_id = _resolve_memory_client_id(client_id, principal)
     deleted = get_conversation_memory_service().delete_items(
         client_id, conversation_id
@@ -171,6 +179,7 @@ def delete_memory_item(
 def cleanup_memory(
     _principal: Principal = Depends(require_roles("admin")),
 ) -> MemoryCleanupResponse:
+    """管理者操作として TTL 超過済みの記憶を物理削除する。"""
     deleted = get_conversation_memory_service().cleanup_expired()
     return MemoryCleanupResponse(expired_deleted=deleted)
 
@@ -179,6 +188,7 @@ def cleanup_memory(
 def observability(
     _principal: Principal = Depends(require_roles("operator", "admin")),
 ) -> dict:
+    """運用者向けに、プロセス内の品質・性能指標と資源情報を返す。"""
     service = get_observability_service()
     return {
         "metrics": service.summary(),
@@ -205,7 +215,7 @@ def search_debug(
     q: str = Query(..., description="検索クエリ"),
     principal: Principal = Depends(require_roles("operator", "admin")),
 ) -> dict:
-    """検索デバッグ用エンドポイント（検索スコアの確認に使用）"""
+    """現在の実行モードで検索だけを行い、ランキングとスコアを確認する。"""
     try:
         mode = get_settings().rag_mode
         if mode in {"local", "local_llm"}:
@@ -304,6 +314,7 @@ def _resolve_memory_client_id(
     *,
     required: bool = True,
 ) -> str | None:
+    """認証済み主体の ID を優先し、他ユーザーの記憶指定を防ぐ。"""
     if principal.authenticated:
         return principal.subject
     if requested_client_id:

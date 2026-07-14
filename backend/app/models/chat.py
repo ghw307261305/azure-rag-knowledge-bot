@@ -1,3 +1,5 @@
+"""チャット、引用、フィードバック API で共有する Pydantic スキーマ。"""
+
 from typing import Literal
 
 from pydantic import BaseModel, Field
@@ -48,11 +50,14 @@ class MemoryUsage(BaseModel):
     enabled: bool = Field(False, description="会話記憶が有効か")
     context_items: int = Field(0, description="今回の回答で参照した記憶件数")
     stored_items: int = Field(0, description="今回新規または更新した記憶件数")
-    masked_pii: list[str] = Field(default_factory=list, description="マスクした PII 種別")
+    masked_pii: list[str] = Field(
+        default_factory=lambda: [], description="マスクした PII 種別"
+    )
     dropped_items: int = Field(0, description="品質または安全理由で保存しなかった件数")
 
 
 class GenerationMetrics(BaseModel):
+    """ローカル生成の各段階を比較するための性能・フォールバック指標。"""
     context_chunks: int = 0
     context_characters: int = 0
     prompt_characters: int = 0
@@ -68,19 +73,22 @@ class GenerationMetrics(BaseModel):
 
 
 class ChatResponse(BaseModel):
+    """利用者向け回答と、引用・検索・運用メタデータをまとめた応答。"""
     request_id: str = Field("", description="回答とフィードバックを関連付ける識別子")
     answer: str
     citations: list[Citation]
     retrieved_chunks: list[RetrievedChunk]
     latency_ms: int
     rewritten_query: str = Field("", description="検索用に書き換えたクエリ")
-    token_usage: TokenUsage = Field(default_factory=TokenUsage)
+    token_usage: TokenUsage = Field(default_factory=lambda: TokenUsage())
     rag_mode: str = Field("", description="回答に使用した RAG 実行モード")
     model: str = Field("", description="回答生成に使用したモデル")
     fallback_used: bool = Field(False, description="安全な代替回答を使用したか")
     sanitized_question: str = Field("", description="PII 清洗後の質問")
-    memory_usage: MemoryUsage = Field(default_factory=MemoryUsage)
-    generation_metrics: GenerationMetrics = Field(default_factory=GenerationMetrics)
+    memory_usage: MemoryUsage = Field(default_factory=lambda: MemoryUsage())
+    generation_metrics: GenerationMetrics = Field(
+        default_factory=lambda: GenerationMetrics()
+    )
 
 
 class FeedbackRequest(BaseModel):

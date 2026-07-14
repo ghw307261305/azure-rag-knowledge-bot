@@ -1,3 +1,4 @@
+# ビルド用 Node.js と配信用 nginx を分け、実行イメージへソースを残さない。
 FROM node:20-alpine AS build
 
 WORKDIR /app

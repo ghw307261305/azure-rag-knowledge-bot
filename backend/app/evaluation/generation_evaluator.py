@@ -30,6 +30,7 @@ AnswerProvider = Callable[[str], dict[str, Any]]
 
 
 def load_generation_cases(dataset_path: Path) -> list[dict[str, Any]]:
+    """回答・拒否・ブロック別の必須条件を検証しながら JSONL を読む。"""
     cases: list[dict[str, Any]] = []
     seen_ids: set[str] = set()
     for line_number, raw_line in enumerate(
@@ -73,6 +74,7 @@ def load_generation_cases(dataset_path: Path) -> list[dict[str, Any]]:
 def evaluate_generation_cases(
     cases: list[dict[str, Any]], provider: AnswerProvider
 ) -> dict[str, Any]:
+    """期待動作ごとの判定器を適用し、生成品質レポートを作る。"""
     evaluated: list[dict[str, Any]] = []
     for case in cases:
         response = provider(case["question"])
@@ -90,11 +92,13 @@ def evaluate_generation_cases(
 def _evaluate_answer_case(
     case: dict[str, Any], response: dict[str, Any]
 ) -> dict[str, Any]:
+    """引用実在性、概念根拠、数値根拠、禁止語をまとめて判定する。"""
     status_code = int(response.get("status_code", 0))
     body = response.get("body") if isinstance(response.get("body"), dict) else {}
     answer = str(body.get("answer", ""))
     citations = body.get("citations") if isinstance(body.get("citations"), list) else []
     citation_map = _citation_map(citations)
+    # 回答が実際に参照した S 番号だけを根拠検証の対象にする。
     referenced_ids = {int(value) for value in SOURCE_MARKER_PATTERN.findall(answer)}
     citation_valid = bool(referenced_ids) and all(
         source_id in citation_map and citation_map[source_id].get("content")
@@ -211,6 +215,7 @@ def _citation_map(citations: list[dict[str, Any]]) -> dict[int, dict[str, Any]]:
 
 
 def _claim_citation_coverage(answer: str) -> float:
+    """空行等を除く各主張単位に [S#] が付いている割合を返す。"""
     factual_units = [
         line.strip()
         for line in answer.splitlines()
@@ -233,6 +238,7 @@ def _concept_is_grounded(
 
 
 def _unsupported_numbers(answer: str, cited_evidence: str) -> list[str]:
+    """回答中の数値が、引用した根拠本文に存在しない場合だけ報告する。"""
     answer_without_markers = SOURCE_MARKER_PATTERN.sub("", answer)
     evidence_normalized = _normalize(cited_evidence)
     unsupported: list[str] = []
@@ -251,6 +257,7 @@ def _normalize(value: str) -> str:
 
 
 def _build_report(cases: list[dict[str, Any]]) -> dict[str, Any]:
+    """期待動作別・カテゴリ別の合格率と生成レイテンシを集計する。"""
     answer_cases = [c for c in cases if c["expected_behavior"] == "answer"]
     refusal_cases = [c for c in cases if c["expected_behavior"] == "refuse"]
     block_cases = [c for c in cases if c["expected_behavior"] == "block"]
@@ -308,6 +315,7 @@ def _build_report(cases: list[dict[str, Any]]) -> dict[str, Any]:
 def render_generation_report(
     report: dict[str, Any], thresholds: dict[str, float]
 ) -> str:
+    """品質ゲートと失敗理由を確認できる Markdown レポートへ変換する。"""
     summary = report["summary"]
     lines = [
         "# Finance Local Generation Evaluation Report",

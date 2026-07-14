@@ -23,6 +23,7 @@ REQUIRED_FIELDS = {
 
 
 def load_cases(dataset_path: Path) -> list[dict[str, Any]]:
+    """JSONL を読み込み、評価不能な重複 ID や不足フィールドを事前に拒否する。"""
     cases: list[dict[str, Any]] = []
     seen_ids: set[str] = set()
     for line_number, raw_line in enumerate(
@@ -59,6 +60,7 @@ def evaluate_cases(
     min_score: float,
     top_k: int = 5,
 ) -> dict[str, Any]:
+    """各ケースを実検索し、順位・フォールバック・根拠語の一致を測定する。"""
     if top_k < 5:
         raise ValueError("top_k must be at least 5 to calculate Hit@5")
 
@@ -149,6 +151,7 @@ def _build_report(
     min_score: float,
     top_k: int,
 ) -> dict[str, Any]:
+    """ケース結果から全体、カテゴリ別、レイテンシの集計値を構築する。"""
     answerable = [case for case in evaluated_cases if case["answerable"]]
     unanswerable = [case for case in evaluated_cases if not case["answerable"]]
     latencies = sorted(case["latency_ms"] for case in evaluated_cases)
@@ -245,6 +248,7 @@ def _percentile(values: list[float], percentile: float) -> float:
 def render_markdown_report(
     report: dict[str, Any], thresholds: dict[str, float]
 ) -> str:
+    """CI と人手レビューの両方で読める Markdown レポートへ変換する。"""
     summary = report["summary"]
     lines = [
         "# Finance Local Retrieval Evaluation Report",

@@ -35,6 +35,7 @@ class OllamaInvalidResponseError(OllamaError):
 def generate_grounded_answer(
     question: str, chunks: list[dict], *, memory_context: str = ""
 ) -> tuple[str, TokenUsage, GenerationMetrics]:
+    """許可済み記憶と番号付き根拠だけを渡し、生成結果と性能指標を返す。"""
     settings = get_settings()
     response_language = _extract_response_language(memory_context)
     preference_instruction = _build_preference_instruction(memory_context)
@@ -56,6 +57,7 @@ def generate_grounded_answer(
             ),
         }
     )
+    # 非ストリーミング応答にして、回答検証後にだけ呼び出し元へ返す。
     payload = {
         "model": settings.ollama_model,
         "messages": messages,
@@ -85,6 +87,7 @@ def generate_grounded_answer(
     except (httpx.HTTPError, ValueError) as exc:
         raise OllamaUnavailableError("Ollama API request failed") from exc
 
+    # モデルごとの引用表記揺れを正規化してから、存在する S 番号だけか検証する。
     answer = _normalize_source_markers(
         str(body.get("message", {}).get("content", "")).strip()
     )
@@ -128,6 +131,7 @@ def _build_user_prompt(
     memory_context: str = "",
     response_language: str = "",
 ) -> str:
+    """根拠境界を XML 風タグで明示し、質問や記憶との混同を防ぐ。"""
     sources: list[str] = []
     for index, chunk in enumerate(chunks, start=1):
         sources.append(
@@ -168,7 +172,7 @@ def _build_user_prompt(
 
 
 def _build_preference_instruction(memory_context: str) -> str:
-    """Convert only allow-listed governed preferences into format instructions."""
+    """治理済み記憶のうち許可リストにある表示設定だけを指示へ変換する。"""
     instructions: list[str] = []
     language_match = re.search(
         r"^\[preference\]\s+response_language=(中文|日本語|English)\s+",
@@ -226,6 +230,7 @@ def _extract_response_language(memory_context: str) -> str:
 
 
 def _validate_answer(answer: str, source_count: int) -> None:
+    """空回答、引用なし、存在しない引用番号を生成失敗として扱う。"""
     if not answer:
         raise OllamaInvalidResponseError("Ollama returned an empty answer")
     markers = {

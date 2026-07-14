@@ -21,6 +21,7 @@ bearer_scheme = HTTPBearer(auto_error=False)
 
 @dataclass(frozen=True)
 class Principal:
+    """認証結果として API 層へ渡す主体、ロール、アクセスグループ。"""
     subject: str
     role: str
     groups: tuple[str, ...]
@@ -38,6 +39,7 @@ def create_local_token(
     groups: list[str] | None = None,
     expires_in_seconds: int = 3600,
 ) -> str:
+    """ローカル検証用に、HS256 署名と期限を持つ最小 JWT を生成する。"""
     settings = get_settings()
     if role not in ALLOWED_ROLES:
         raise ValueError(f"role must be one of: {', '.join(sorted(ALLOWED_ROLES))}")
@@ -66,10 +68,12 @@ def create_local_token(
 
 
 def decode_local_token(token: str) -> Principal:
+    """署名・アルゴリズム・期限・必須 claim を検証して主体へ変換する。"""
     settings = get_settings()
     try:
         encoded_header, encoded_payload, encoded_signature = token.split(".")
         signed = f"{encoded_header}.{encoded_payload}"
+        # compare_digest を使い、署名比較のタイミング差を漏らさない。
         expected_signature = hmac.new(
             settings.local_jwt_secret.encode("utf-8"),
             signed.encode("ascii"),
@@ -106,6 +110,7 @@ def decode_local_token(token: str) -> Principal:
 def get_current_principal(
     credentials: HTTPAuthorizationCredentials | None = Depends(bearer_scheme),
 ) -> Principal:
+    """AUTH_MODE に応じて匿名主体を許可するか、Bearer JWT を要求する。"""
     settings = get_settings()
     if settings.auth_mode == "disabled":
         return Principal("anonymous-local", "admin", ("*",), False)
@@ -115,6 +120,7 @@ def get_current_principal(
 
 
 def require_roles(*allowed_roles: str) -> Callable[[Principal], Principal]:
+    """指定ロールのいずれかを持つ主体だけを通す FastAPI 依存関数を作る。"""
     invalid = set(allowed_roles) - ALLOWED_ROLES
     if invalid:
         raise ValueError(f"Unsupported roles: {', '.join(sorted(invalid))}")

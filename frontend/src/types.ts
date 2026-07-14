@@ -1,3 +1,4 @@
+// バックエンドの Pydantic スキーマと対応する API 境界の型。
 export interface Citation {
   title: string;
   chunk_id: string;
@@ -26,6 +27,7 @@ export interface MemoryUsage {
 }
 
 export interface GenerationMetrics {
+  // Ollama の各段階を分離し、モデル起動と生成処理の遅延を切り分ける。
   context_chunks: number;
   context_characters: number;
   prompt_characters: number;
@@ -41,6 +43,7 @@ export interface GenerationMetrics {
 }
 
 export interface MemoryItem {
+  // kind はバックエンドで保存を許可している二種類だけに限定する。
   id: string;
   conversation_id: string;
   kind: "preference" | "fact";
@@ -77,6 +80,7 @@ export interface ChatResponse {
 }
 
 export interface Message {
+  // API 応答に、画面表示とローカル履歴に必要な情報を加えた UI モデル。
   id: string;
   request_id?: string;
   question: string;

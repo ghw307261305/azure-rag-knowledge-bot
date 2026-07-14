@@ -6,8 +6,10 @@ from app.services.config import Settings
 
 
 def configure_telemetry(app: FastAPI, settings: Settings) -> bool:
+    """有効時だけ依存パッケージを読み込み、FastAPI の span を OTLP へ送る。"""
     if not settings.otel_enabled:
         return False
+    # 無効な環境では OpenTelemetry を必須依存にしないため遅延 import する。
     try:
         from opentelemetry import trace
         from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter

@@ -10,6 +10,7 @@ from app.services.conversation_memory_service import sanitize_text
 
 
 class FeedbackService:
+    """回答評価を PII 安全化後に保存し、同一回答への再評価は更新する。"""
     def __init__(self, db_path: Path) -> None:
         self.db_path = db_path.resolve()
         self.db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -39,6 +40,7 @@ class FeedbackService:
         rating: str,
         reason: str,
     ) -> None:
+        """自由記述理由を安全化し、client/request の組み合わせで upsert する。"""
         sanitized_reason = sanitize_text(reason).text[:500]
         now = datetime.now(timezone.utc).isoformat()
         with self._connect() as connection:
