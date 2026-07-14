@@ -1,7 +1,17 @@
-import type { ChatResponse } from "./types";
+// バックエンド API との通信と、画面表示用のエラー正規化を一か所に集約する。
+import type { ChatResponse, MemoryListResponse } from "./types";
 
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ?? "http://127.0.0.1:8000/api";
+const LOCAL_AUTH_TOKEN = import.meta.env.VITE_LOCAL_AUTH_TOKEN as string | undefined;
+
+function requestHeaders(json = false): HeadersInit {
+  // ローカル JWT は開発モード用。未設定時は匿名モードとして送信する。
+  const headers: Record<string, string> = {};
+  if (json) headers["Content-Type"] = "application/json";
+  if (LOCAL_AUTH_TOKEN) headers.Authorization = `Bearer ${LOCAL_AUTH_TOKEN}`;
+  return headers;
+}
 
 export class ApiError extends Error {
   status: number;
@@ -14,6 +24,7 @@ export class ApiError extends Error {
 }
 
 function extractErrorMessage(payload: unknown): string | null {
+  // FastAPI は通常エラーと入力検証エラーで detail の形が異なるため両方を扱う。
   if (typeof payload === "string" && payload.trim()) {
     return payload.trim();
   }
@@ -56,15 +67,25 @@ function extractErrorMessage(payload: unknown): string | null {
   return messages.length > 0 ? messages.join(" / ") : null;
 }
 
-export async function sendQuestion(question: string): Promise<ChatResponse> {
+export async function sendQuestion(
+  question: string,
+  clientId: string,
+  conversationId: string,
+  useMemory = true
+): Promise<ChatResponse> {
+  // 会話 ID を毎回渡し、サーバー側の記憶とブラウザ履歴を同じ単位に揃える。
   const response = await fetch(`${API_BASE_URL}/chat`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json"
-    },
-    body: JSON.stringify({ question })
+    headers: requestHeaders(true),
+    body: JSON.stringify({
+      question,
+      client_id: clientId,
+      conversation_id: conversationId,
+      use_memory: useMemory
+    })
   });
 
+  // プロキシ障害など JSON 以外の応答でも、利用者へ読めるメッセージを返す。
   const contentType = response.headers.get("content-type") ?? "";
   const payload = contentType.includes("application/json")
     ? await response.json()
@@ -78,4 +99,89 @@ export async function sendQuestion(question: string): Promise<ChatResponse> {
   }
 
   return payload as ChatResponse;
+}
+
+export async function getMemory(clientId: string): Promise<MemoryListResponse> {
+  const params = new URLSearchParams({ client_id: clientId });
+  const response = await fetch(`${API_BASE_URL}/memory?${params}`, {
+    headers: requestHeaders()
+  });
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new ApiError(
+      extractErrorMessage(payload) ?? "記憶データの取得に失敗しました。",
+      response.status
+    );
+  }
+  return payload as MemoryListResponse;
+}
+
+export async function clearMemory(
+  clientId: string,
+  conversationId?: string
+): Promise<number> {
+  // conversationId 省略時はクライアント全体、指定時は一会話だけを削除する。
+  const params = new URLSearchParams({ client_id: clientId });
+  if (conversationId) params.set("conversation_id", conversationId);
+  const response = await fetch(`${API_BASE_URL}/memory?${params}`, {
+    method: "DELETE",
+    headers: requestHeaders()
+  });
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new ApiError(
+      extractErrorMessage(payload) ?? "記憶データの削除に失敗しました。",
+      response.status
+    );
+  }
+  return Number((payload as { deleted?: number }).deleted ?? 0);
+}
+
+export async function deleteMemoryItem(
+  clientId: string,
+  itemId: string
+): Promise<void> {
+  // パス値は URL エンコードし、記憶 ID を URL 構造として解釈させない。
+  const params = new URLSearchParams({ client_id: clientId });
+  const response = await fetch(`${API_BASE_URL}/memory/items/${encodeURIComponent(itemId)}?${params}`, {
+    method: "DELETE",
+    headers: requestHeaders()
+  });
+  const payload = await response.json();
+  if (!response.ok) {
+    throw new ApiError(
+      extractErrorMessage(payload) ?? "記憶データの削除に失敗しました。",
+      response.status
+    );
+  }
+}
+
+export async function submitFeedback(
+  requestId: string,
+  clientId: string,
+  conversationId: string,
+  rating: "helpful" | "unhelpful",
+  reason = ""
+): Promise<void> {
+  const response = await fetch(`${API_BASE_URL}/feedback`, {
+    method: "POST",
+    headers: requestHeaders(true),
+    body: JSON.stringify({
+      request_id: requestId,
+      client_id: clientId,
+      conversation_id: conversationId,
+      rating,
+      reason
+    })
+  });
+  const contentType = response.headers.get("content-type") ?? "";
+  const payload = contentType.includes("application/json")
+    ? await response.json()
+    : await response.text();
+  if (!response.ok) {
+    throw new ApiError(
+      extractErrorMessage(payload) ?? "フィードバックの保存に失敗しました。",
+      response.status
+    );
+  }
 }

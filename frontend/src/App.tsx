@@ -1,7 +1,15 @@
+// チャット UI、会話履歴、会話記憶の操作をまとめる画面コンポーネント。
 import { KeyboardEvent, useEffect, useRef, useState } from "react";
 
-import { ApiError, sendQuestion } from "./api";
-import type { Message } from "./types";
+import {
+  ApiError,
+  clearMemory,
+  deleteMemoryItem,
+  getMemory,
+  sendQuestion,
+  submitFeedback,
+} from "./api";
+import type { MemoryItem, Message } from "./types";
 
 // ── 会話セッション型 ────────────────────────────────────────
 interface Conversation {
@@ -12,35 +20,59 @@ interface Conversation {
 }
 
 const STORAGE_KEY = "rag_conversations";
+const CLIENT_ID_KEY = "rag_client_id";
+const MEMORY_PREFERENCE_KEY = "rag_memory_enabled";
 const MAX_HISTORY = 30;
 
+function sanitizeLocalHistoryText(value: string): string {
+  // サーバーと同じ主要 PII を、ブラウザへ履歴保存する前にも防御的にマスクする。
+  return value
+    .normalize("NFKC")
+    .replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, "")
+    .replace(/[\u200b-\u200f\u2060\ufeff]/g, "")
+    .replace(/\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi, "[EMAIL]")
+    .replace(/(?<!\d)(?:\+81[- ]?|0)\d{1,4}[- ]?\d{1,4}[- ]?\d{3,4}(?!\d)/g, "[PHONE]")
+    .replace(/(?<!\d)〒?\d{3}-?\d{4}(?!\d)/g, "[POSTAL_CODE]")
+    .replace(/(?<!\d)\d{10,19}(?!\d)/g, "[LONG_NUMBER]");
+}
+
 function loadConversations(): Conversation[] {
+  // 保存形式の破損で画面全体が起動不能にならないよう、読込失敗は空履歴へ戻す。
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw) as Conversation[];
-    return parsed.map((c) => ({
+    // 過去バージョンの未マスク履歴も、読み込んだ時点で再保存して安全化する。
+    const sanitized = parsed.map((c) => ({
       ...c,
-      messages: c.messages.map((m) => ({ ...m, timestamp: new Date(m.timestamp) })),
+      messages: c.messages.map((m) => ({
+        ...m,
+        question: sanitizeLocalHistoryText(m.question),
+        answer: sanitizeLocalHistoryText(m.answer),
+        timestamp: new Date(m.timestamp)
+      })),
     }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized.slice(0, MAX_HISTORY)));
+    return sanitized;
   } catch {
     return [];
   }
 }
 
 function saveConversations(convs: Conversation[]) {
+  // localStorage の肥大化を避けるため、新しい会話から最大件数だけ保存する。
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(convs.slice(0, MAX_HISTORY)));
   } catch {
-    // ignore quota errors
+    // 容量超過時もチャット自体は継続できるため、保存失敗は UI を止めない。
   }
 }
 
 const SAMPLE_QUESTIONS = [
-  "パスワードリセットの有効期限は何分ですか？",
-  "P1 障害が発生した場合の目標復旧時間（RTO）は？",
-  "スタンダードプランのスカウト送信上限は月何件ですか？",
-  "面接をキャンセルする場合、どのような手順が必要ですか？",
+  "本人確認書類の住所と申込住所が異なる場合はどうしますか？",
+  "振込はいつまで取り消せますか？",
+  "AML アラートが出たら直ちに口座を凍結しますか？",
+  "返済が一度遅れた場合はどのように対応しますか？",
 ];
 
 // ── SVG アイコン ────────────────────────────────────────────
@@ -90,6 +122,7 @@ function formatDate(isoString: string): string {
 }
 
 function generateId(): string {
+  // 対応ブラウザでは標準 UUID を使い、段階的に安全な代替手段へ降格する。
   const cryptoApi = globalThis.crypto;
   if (cryptoApi?.randomUUID) {
     return cryptoApi.randomUUID();
@@ -113,6 +146,19 @@ function generateId(): string {
   return `id-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+function getOrCreateClientId(): string {
+  // 匿名利用でも、会話記憶の所有者境界として安定したブラウザ ID が必要。
+  const current = localStorage.getItem(CLIENT_ID_KEY);
+  if (current) return current;
+  const created = generateId();
+  localStorage.setItem(CLIENT_ID_KEY, created);
+  return created;
+}
+
+function loadMemoryPreference(): boolean {
+  return localStorage.getItem(MEMORY_PREFERENCE_KEY) !== "false";
+}
+
 function getDisplayError(error: unknown): string {
   if (error instanceof ApiError) {
     return error.message;
@@ -126,6 +172,7 @@ function getDisplayError(error: unknown): string {
 }
 
 export default function App() {
+  // conversations は保存済み全会話、messages は現在開いている会話の表示状態。
   const [conversations, setConversations] = useState<Conversation[]>(loadConversations);
   const [activeConvId, setActiveConvId] = useState<string | null>(null);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -133,23 +180,30 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showDev, setShowDev] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 800);
+  const [showMemory, setShowMemory] = useState(false);
+  const [memoryItems, setMemoryItems] = useState<MemoryItem[]>([]);
+  const [memoryLoading, setMemoryLoading] = useState(false);
+  const [memoryError, setMemoryError] = useState("");
+  const [memoryEnabled, setMemoryEnabled] = useState(loadMemoryPreference);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  // refs to avoid stale closures in async callbacks
+  // 非同期 API 完了時に古い state を参照しないよう、最新値を ref に同期する。
   const activeConvIdRef = useRef<string | null>(null);
   activeConvIdRef.current = activeConvId;
   const messagesRef = useRef<Message[]>([]);
   messagesRef.current = messages;
-  // tracks the question currently being fetched (question state is cleared before request)
+  // 入力欄を先に空にしても送信中の質問を表示できるよう、別 ref で保持する。
   const pendingQuestionRef = useRef("");
+  const clientIdRef = useRef(getOrCreateClientId());
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
   async function handleSubmit() {
+    // 二重送信を防ぎ、送信開始時点の質問と会話 ID を一つのリクエストに固定する。
     const q = question.trim();
     if (!q || loading) return;
     pendingQuestionRef.current = q;
@@ -158,29 +212,41 @@ export default function App() {
     setLoading(true);
     textareaRef.current?.focus();
     try {
-      const res = await sendQuestion(q);
+      const currentId = activeConvIdRef.current;
+      const requestConversationId = currentId ?? generateId();
+      const res = await sendQuestion(
+        q,
+        clientIdRef.current,
+        requestConversationId,
+        memoryEnabled
+      );
       const newMsg = {
         id: generateId(),
-        question: q,
+        request_id: res.request_id,
+        question: res.sanitized_question || q,
         answer: res.answer,
         citations: res.citations,
         retrieved_chunks: res.retrieved_chunks,
         latency_ms: res.latency_ms,
         rewritten_query: res.rewritten_query,
         token_usage: res.token_usage,
+        rag_mode: res.rag_mode,
+        model: res.model,
+        fallback_used: res.fallback_used,
+        sanitized_question: res.sanitized_question,
+        memory_usage: res.memory_usage,
+        generation_metrics: res.generation_metrics,
         timestamp: new Date(),
       };
 
-      // Compute updated messages using ref (safe against stale closure)
+      // ref の最新メッセージを使い、待機中に切り替わった state の取りこぼしを防ぐ。
       const updatedMsgs = [...messagesRef.current, newMsg];
       setMessages(updatedMsgs);
 
-      // Persist conversation — no nested setState calls
+      // 初回回答時だけ会話を作り、以降は同じ ID の履歴を更新する。
       const title =
         updatedMsgs[0].question.slice(0, 26) +
         (updatedMsgs[0].question.length > 26 ? "…" : "");
-      const currentId = activeConvIdRef.current;
-
       if (currentId) {
         setConversations((prev) => {
           const updated = prev.map((c) =>
@@ -190,12 +256,11 @@ export default function App() {
           return updated;
         });
       } else {
-        const newId = generateId();
-        activeConvIdRef.current = newId;
-        setActiveConvId(newId);
+        activeConvIdRef.current = requestConversationId;
+        setActiveConvId(requestConversationId);
         setConversations((prev) => {
           const updated = [
-            { id: newId, title, messages: updatedMsgs, createdAt: new Date().toISOString() },
+            { id: requestConversationId, title, messages: updatedMsgs, createdAt: new Date().toISOString() },
             ...prev,
           ];
           saveConversations(updated);
@@ -232,6 +297,7 @@ export default function App() {
   }
 
   function deleteConversation(e: React.MouseEvent, convId: string) {
+    // クリックが親の「会話を開く」操作へ伝播しないよう先に止める。
     e.stopPropagation();
     setConversations((prev) => {
       const updated = prev.filter((c) => c.id !== convId);
@@ -241,9 +307,99 @@ export default function App() {
     if (activeConvId === convId) {
       startNewConversation();
     }
+    // ブラウザ履歴とサーバー記憶は別保存先なので、後者も明示的に削除する。
+    void clearMemory(clientIdRef.current, convId).catch(() => {
+      setError("会話履歴は削除しましたが、サーバー側の記憶削除に失敗しました。");
+    });
   }
 
-  // Group conversations by date label
+  async function openMemoryPanel() {
+    // パネルは先に開き、取得中・失敗状態をダイアログ内で表示する。
+    setShowMemory(true);
+    setMemoryLoading(true);
+    setMemoryError("");
+    try {
+      const response = await getMemory(clientIdRef.current);
+      setMemoryItems(response.items);
+    } catch (memoryLoadError) {
+      setMemoryError(getDisplayError(memoryLoadError));
+    } finally {
+      setMemoryLoading(false);
+    }
+  }
+
+  async function clearAllMemory() {
+    if (!window.confirm("保存済みの会話記憶をすべて削除しますか？")) return;
+    setMemoryLoading(true);
+    setMemoryError("");
+    try {
+      await clearMemory(clientIdRef.current);
+      setMemoryItems([]);
+    } catch (memoryClearError) {
+      setMemoryError(getDisplayError(memoryClearError));
+    } finally {
+      setMemoryLoading(false);
+    }
+  }
+
+  function toggleMemory() {
+    // 選択は次回起動後も維持するが、既に保存された記憶の削除は別操作とする。
+    setMemoryEnabled((current) => {
+      const next = !current;
+      localStorage.setItem(MEMORY_PREFERENCE_KEY, String(next));
+      return next;
+    });
+  }
+
+  async function removeMemoryItem(itemId: string) {
+    setMemoryLoading(true);
+    setMemoryError("");
+    try {
+      await deleteMemoryItem(clientIdRef.current, itemId);
+      setMemoryItems((current) => current.filter((item) => item.id !== itemId));
+    } catch (memoryDeleteError) {
+      setMemoryError(getDisplayError(memoryDeleteError));
+    } finally {
+      setMemoryLoading(false);
+    }
+  }
+
+  async function rateMessage(
+    message: Message,
+    rating: "helpful" | "unhelpful"
+  ) {
+    // request_id がない旧履歴や、保存先会話が未確定の回答は送信対象外。
+    if (!message.request_id || !activeConvIdRef.current) return;
+    const reason = rating === "unhelpful"
+      ? window.prompt("改善してほしい点があれば入力してください（任意）", "") ?? ""
+      : "";
+    try {
+      await submitFeedback(
+        message.request_id,
+        clientIdRef.current,
+        activeConvIdRef.current,
+        rating,
+        reason
+      );
+      const updatedMessages = messagesRef.current.map((item) =>
+        item.id === message.id ? { ...item, feedback: rating } : item
+      );
+      setMessages(updatedMessages);
+      setConversations((current) => {
+        const updated = current.map((conversation) =>
+          conversation.id === activeConvIdRef.current
+            ? { ...conversation, messages: updatedMessages }
+            : conversation
+        );
+        saveConversations(updated);
+        return updated;
+      });
+    } catch (feedbackError) {
+      setError(getDisplayError(feedbackError));
+    }
+  }
+
+  // 履歴の並び順を保ったまま、表示上の日付ラベルだけでグループ化する。
   const groupedConvs = conversations.reduce<Record<string, Conversation[]>>((acc, c) => {
     const label = formatDate(c.createdAt);
     (acc[label] ??= []).push(c);
@@ -269,10 +425,27 @@ export default function App() {
             </svg>
           </button>
           <span className="navbar-logo"><BotIcon /></span>
-          <span className="navbar-title">ナレッジアシスタント</span>
+          <span className="navbar-title">金融ナレッジアシスタント</span>
         </div>
         <div className="navbar-right">
-          <span className="navbar-badge">Azure OpenAI × AI Search</span>
+          <span className="navbar-badge">Financial RAG PoC</span>
+          <button
+            type="button"
+            className={`memory-toggle ${memoryEnabled ? "active" : ""}`}
+            onClick={toggleMemory}
+            aria-pressed={memoryEnabled}
+            title="このブラウザから送る質問で会話記憶を使用するか切り替え"
+          >
+            Memory {memoryEnabled ? "ON" : "OFF"}
+          </button>
+          <button
+            type="button"
+            className={`dev-toggle ${showMemory ? "active" : ""}`}
+            onClick={openMemoryPanel}
+            title="治理済み会話記憶を確認"
+          >
+            Memory
+          </button>
           <button
             type="button"
             className={`dev-toggle ${showDev ? "active" : ""}`}
@@ -343,8 +516,8 @@ export default function App() {
               <div className="welcome-icon"><BotIcon /></div>
               <h2 className="welcome-title">何でもお聞きください</h2>
               <p className="welcome-desc">
-                社内ナレッジベースに登録された情報をもとに回答します。<br />
-                業務ルール・手順・仕様・FAQ など幅広くサポートします。
+                架空の金融機関向け社内ナレッジをもとに回答します。<br />
+                口座・振込・KYC/AML・融資・リスク・障害対応を検索できます。
               </p>
               <div className="suggestion-grid">
                 {SAMPLE_QUESTIONS.map((q) => (
@@ -375,6 +548,13 @@ export default function App() {
                       <p className="msg-answer">{msg.answer}</p>
                     </div>
 
+                    {msg.model && (
+                      <div className={`model-status ${msg.fallback_used ? "fallback" : ""}`}>
+                        <span>{msg.rag_mode} · {msg.model}</span>
+                        {msg.fallback_used && <span>原文回答へ安全に切替済み</span>}
+                      </div>
+                    )}
+
                     {/* 引用元ドキュメント */}
                     {msg.citations.length > 0 && (
                       <div className="citation-row">
@@ -388,6 +568,29 @@ export default function App() {
                       </div>
                     )}
 
+                    {msg.request_id && (
+                      <div className="feedback-row" aria-label="回答フィードバック">
+                        <span>この回答は役に立ちましたか？</span>
+                        <button
+                          type="button"
+                          className={msg.feedback === "helpful" ? "active" : ""}
+                          onClick={() => void rateMessage(msg, "helpful")}
+                          aria-label="役に立った"
+                        >
+                          👍
+                        </button>
+                        <button
+                          type="button"
+                          className={msg.feedback === "unhelpful" ? "active" : ""}
+                          onClick={() => void rateMessage(msg, "unhelpful")}
+                          aria-label="改善が必要"
+                        >
+                          👎
+                        </button>
+                        {msg.feedback && <small>送信済み</small>}
+                      </div>
+                    )}
+
                     {/* 開発者情報（Dev モード時のみ） */}
                     {showDev && (
                       <details className="dev-panel">
@@ -395,6 +598,54 @@ export default function App() {
                         <dl className="dev-dl">
                           <dt>検索クエリ</dt>
                           <dd>{msg.rewritten_query || "—"}</dd>
+                          <dt>実行モード</dt>
+                          <dd>{msg.rag_mode || "—"}</dd>
+                          <dt>生成モデル</dt>
+                          <dd>{msg.model || "未使用"}</dd>
+                          <dt>フォールバック</dt>
+                          <dd>{msg.fallback_used ? "使用" : "未使用"}</dd>
+                          <dt>会話記憶</dt>
+                          <dd>
+                            {msg.memory_usage?.enabled
+                              ? `参照 ${msg.memory_usage.context_items} / 保存 ${msg.memory_usage.stored_items} / 破棄 ${msg.memory_usage.dropped_items}`
+                              : "未使用"}
+                          </dd>
+                          <dt>会話摘要</dt>
+                          <dd>
+                            {msg.memory_usage?.summary_used
+                              ? "検索質問の補完に使用"
+                              : msg.memory_usage?.summary_stored
+                                ? "今回のトピックを更新"
+                                : "未使用"}
+                          </dd>
+                          <dt>PII マスク</dt>
+                          <dd>{msg.memory_usage?.masked_pii.join(", ") || "なし"}</dd>
+                          <dt>生成コンテキスト</dt>
+                          <dd>
+                            {msg.generation_metrics
+                              ? `${msg.generation_metrics.context_chunks} chunks / ${msg.generation_metrics.context_characters} chars`
+                              : "—"}
+                          </dd>
+                          <dt>Ollama 段階時間</dt>
+                          <dd>
+                            {msg.generation_metrics
+                              ? `load ${msg.generation_metrics.model_load_ms.toFixed(0)} / prompt ${msg.generation_metrics.prompt_eval_ms.toFixed(0)} / generate ${msg.generation_metrics.generation_ms.toFixed(0)} ms`
+                              : "—"}
+                          </dd>
+                          <dt>生成速度</dt>
+                          <dd>
+                            {msg.generation_metrics?.generation_tokens_per_second
+                              ? `${msg.generation_metrics.generation_tokens_per_second.toFixed(2)} tokens/s`
+                              : "—"}
+                          </dd>
+                          <dt>回退理由</dt>
+                          <dd>{msg.generation_metrics?.fallback_reason || "なし"}</dd>
+                          <dt>根拠補完</dt>
+                          <dd>
+                            {msg.generation_metrics?.evidence_completion_used
+                              ? "あり"
+                              : "なし"}
+                          </dd>
                           <dt>レイテンシ</dt>
                           <dd>{msg.latency_ms} ms</dd>
                           <dt>トークン</dt>
@@ -469,7 +720,9 @@ export default function App() {
                 <SendIcon />
               </button>
             </div>
-            <p className="input-hint">Shift + Enter で改行</p>
+            <p className="input-hint">
+              Shift + Enter で改行 · PII は回答生成・保存前にマスクされ、記憶には残りません。
+            </p>
           </div>
         </div>
 
@@ -514,6 +767,65 @@ export default function App() {
           )}
         </aside>
       </div>
+
+      {showMemory && (
+        <div className="memory-overlay" role="presentation" onMouseDown={() => setShowMemory(false)}>
+          <section
+            className="memory-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-label="会話記憶"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className="memory-dialog-header">
+              <div>
+                <h2>会話記憶</h2>
+                <p>PII 清洗後の preference、明示的 fact、短期会話摘要を保存します。</p>
+              </div>
+              <button type="button" className="memory-close" onClick={() => setShowMemory(false)}>×</button>
+            </div>
+
+            {memoryLoading ? (
+              <p className="memory-empty">読み込み中…</p>
+            ) : memoryError ? (
+              <p className="memory-error">{memoryError}</p>
+            ) : memoryItems.length === 0 ? (
+              <p className="memory-empty">保存されている記憶はありません。</p>
+            ) : (
+              <div className="memory-list">
+                {memoryItems.map((item) => (
+                  <article key={item.id} className="memory-item">
+                    <div className="memory-item-meta">
+                      <span className={`memory-kind ${item.kind}`}>{item.kind}</span>
+                      <div className="memory-item-actions">
+                        <span>信頼度 {Math.round(item.confidence * 100)}%</span>
+                        <button
+                          type="button"
+                          onClick={() => void removeMemoryItem(item.id)}
+                          aria-label={`${item.key} を削除`}
+                          title="この記憶だけを削除"
+                        >
+                          <TrashIcon />
+                        </button>
+                      </div>
+                    </div>
+                    <strong>{item.key}</strong>
+                    <p>{item.value}</p>
+                    <small>有効期限 {new Date(item.expires_at).toLocaleDateString("ja-JP")}</small>
+                  </article>
+                ))}
+              </div>
+            )}
+
+            <div className="memory-dialog-actions">
+              <button type="button" className="memory-clear" onClick={clearAllMemory} disabled={memoryLoading || memoryItems.length === 0}>
+                すべての記憶を削除
+              </button>
+              <button type="button" className="memory-done" onClick={() => setShowMemory(false)}>閉じる</button>
+            </div>
+          </section>
+        </div>
+      )}
     </div>
   );
 }

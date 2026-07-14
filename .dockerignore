@@ -1,0 +1,11 @@
+.git
+.github
+.env
+**/.venv
+**/node_modules
+**/dist
+**/__pycache__
+**/.pytest_cache
+output
+infra/*.pem
+infra/bicep/*.local.bicepparam

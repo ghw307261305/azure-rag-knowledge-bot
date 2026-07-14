@@ -12,6 +12,12 @@ param appServicePlanSkuName = 'F1'
 // Deploy the frontend into the same Japan East App Service plan.
 param deployFrontendApp = true
 
+// App Service uses the real Azure RAG path. Local modes remain available for development.
+param ragMode = 'azure'
+
+// Local SQLite memory is intentionally disabled in App Service until authenticated durable storage is configured.
+param enableLocalMemory = false
+
 // Set a unique frontend web app name if the default name is already in use.
 param frontendAppName = 'app-rag-demo-dev-frontend'
 

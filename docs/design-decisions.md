@@ -91,7 +91,8 @@
 - 「わかりません」を明示することのほうが誤情報を返すよりはるかに安全
 
 **現在の設定**:
-- `MIN_SCORE_THRESHOLD = 0.01`（Azure AI Search の RRF スコアは低めのため）
+- `AZURE_MIN_SCORE=0.01`（Azure AI Search の RRF スコアを実環境で校正するまでの暫定値）
+- `LOCAL_MIN_SCORE=0.06`（固定ローカル評価セットから設定）
 
 **トレードオフ**:
 - 閾値が低すぎると hallucination リスクが残る

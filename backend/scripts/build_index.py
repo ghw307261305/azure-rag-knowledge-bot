@@ -1,6 +1,6 @@
 """
 ナレッジベース インデクシングスクリプト
-docs/knowledge/ のMarkdownファイルを読み込み、
+KNOWLEDGE_DIR で指定した Markdown ディレクトリを読み込み、
 チャンクに分割してAzure AI Searchに登録する
 
 使い方:
@@ -21,6 +21,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from app.services.chunking_service import load_and_chunk
+from app.services.config import get_settings
 from app.services.openai_service import get_embedding
 from app.services.search_service import create_index, delete_index, upload_documents
 
@@ -31,7 +32,14 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-KNOWLEDGE_DIR = Path(__file__).parent.parent.parent / "docs" / "knowledge"
+REPO_ROOT = Path(__file__).parent.parent.parent
+
+
+def get_knowledge_dir() -> Path:
+    configured_path = Path(get_settings().knowledge_dir)
+    if configured_path.is_absolute():
+        return configured_path
+    return (REPO_ROOT / configured_path).resolve()
 
 
 def build_index(rebuild: bool = False) -> None:
@@ -51,11 +59,13 @@ def build_index(rebuild: bool = False) -> None:
     create_index()
 
     # 2. Markdownファイルを収集
-    md_files = sorted(KNOWLEDGE_DIR.glob("*.md"))
+    knowledge_dir = get_knowledge_dir()
+    md_files = sorted(knowledge_dir.glob("*.md"))
     if not md_files:
-        logger.error(f"知識ドキュメントが見つかりません: {KNOWLEDGE_DIR}")
+        logger.error(f"知識ドキュメントが見つかりません: {knowledge_dir}")
         sys.exit(1)
 
+    logger.info(f"ナレッジディレクトリ: {knowledge_dir}")
     logger.info(f"対象ファイル数: {len(md_files)}")
 
     # 3. チャンク化 → Embedding → 登録

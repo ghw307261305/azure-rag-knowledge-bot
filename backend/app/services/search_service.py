@@ -26,6 +26,7 @@ logger = logging.getLogger(__name__)
 
 
 def _get_index_client() -> SearchIndexClient:
+    """インデックス定義を管理する Azure AI Search クライアントを生成する。"""
     s = get_settings()
     return SearchIndexClient(
         endpoint=s.azure_search_endpoint,
@@ -34,6 +35,7 @@ def _get_index_client() -> SearchIndexClient:
 
 
 def _get_search_client() -> SearchClient:
+    """ドキュメント登録と検索に使用するデータプレーンのクライアントを生成する。"""
     s = get_settings()
     return SearchClient(
         endpoint=s.azure_search_endpoint,
@@ -88,6 +90,7 @@ def delete_index() -> None:
 def upload_documents(documents: List[dict]) -> None:
     """ドキュメントをバッチでアップロードする"""
     client = _get_search_client()
+    # 大量登録時のリクエストサイズと失敗範囲を抑えるため分割する。
     batch_size = 100
     for i in range(0, len(documents), batch_size):
         batch = documents[i:i + batch_size]
@@ -102,6 +105,7 @@ def hybrid_search(query: str, query_vector: List[float], top_k: int) -> List[dic
     ハイブリッド検索（キーワード + ベクトル）を実行する
     Azure AI Search の RRF で結果をマージして返す
     """
+    # キーワード検索と同じ問い合わせにベクトル検索を追加し、RRF 統合は Azure 側へ任せる。
     client = _get_search_client()
     vector_query = VectorizedQuery(
         vector=query_vector,
