@@ -141,6 +141,25 @@ function New-ProductionEnvFile {
     return $tempEnvPath
 }
 
+function Get-EnvSetting {
+    param(
+        [string]$SourceEnvPath,
+        [string]$Name,
+        [string]$DefaultValue
+    )
+
+    foreach ($line in Get-Content -LiteralPath $SourceEnvPath -Encoding UTF8) {
+        if ($line -match "^\s*$([regex]::Escape($Name))\s*=\s*(.*?)\s*$") {
+            $value = $Matches[1].Trim().Trim('"').Trim("'")
+            if (-not [string]::IsNullOrWhiteSpace($value)) {
+                return $value
+            }
+        }
+    }
+
+    return $DefaultValue
+}
+
 function Wait-HttpReady {
     param(
         [string]$Uri,
@@ -165,7 +184,6 @@ $scriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoRoot = (Resolve-Path (Join-Path $scriptDir '..\..')).Path
 $frontendDir = Join-Path $repoRoot 'frontend'
 $backendDir = Join-Path $repoRoot 'backend'
-$knowledgeDir = Join-Path $repoRoot 'docs\knowledge'
 $fallbackKeyPath = Join-Path $repoRoot 'infra\vm-b1s-linux-01_key.pem'
 
 if ([string]::IsNullOrWhiteSpace($KeyPath)) {
@@ -183,6 +201,18 @@ $npmCommand = Resolve-CommandName @('npm.cmd', 'npm')
 
 $resolvedKeyPath = Ensure-SshKey -DesiredKeyPath $KeyPath -FallbackKeyPath $fallbackKeyPath
 $resolvedEnvFile = (Resolve-Path -LiteralPath $EnvFile).Path
+$knowledgeRelativePath = Get-EnvSetting -SourceEnvPath $resolvedEnvFile -Name 'KNOWLEDGE_DIR' -DefaultValue 'docs/knowledge-finance'
+if ([System.IO.Path]::IsPathRooted($knowledgeRelativePath) -or $knowledgeRelativePath -notmatch '^docs[\\/][^\\/]+$') {
+    throw "KNOWLEDGE_DIR must point to one repository directory under docs/, for example docs/knowledge-finance. Actual: '$knowledgeRelativePath'"
+}
+$knowledgeDir = [System.IO.Path]::GetFullPath((Join-Path $repoRoot $knowledgeRelativePath))
+if (-not (Test-Path -LiteralPath $knowledgeDir -PathType Container)) {
+    throw "Knowledge directory configured by KNOWLEDGE_DIR was not found: '$knowledgeDir'"
+}
+$knowledgeFiles = @(Get-ChildItem -LiteralPath $knowledgeDir -Filter '*.md' -File)
+if ($knowledgeFiles.Count -eq 0) {
+    throw "Knowledge directory contains no Markdown files: '$knowledgeDir'"
+}
 $sshArgs = @('-o', 'StrictHostKeyChecking=no', '-i', $resolvedKeyPath, "$VmUser@$VmHost")
 $scpBaseArgs = @('-o', 'StrictHostKeyChecking=no', '-i', $resolvedKeyPath)
 $tempEnvPath = $null
@@ -224,7 +254,7 @@ mkdir -p "$REMOTE_ROOT/backend" "$REMOTE_ROOT/docs" "$REMOTE_ROOT/frontend-dist"
 '@.Replace('__REMOTE_ROOT__', $RemoteRoot)
     Invoke-RemoteScript -SshArguments $sshArgs -ScriptText $prepareRemoteScript -FailureMessage 'Failed to prepare the VM.'
 
-    Write-Step 'Uploading backend, knowledge documents, frontend, and environment file'
+    Write-Step "Uploading backend, $knowledgeRelativePath, frontend, and environment file"
     Invoke-Checked -FilePath 'scp' -Arguments ($scpBaseArgs + @('-r', (Join-Path $backendDir 'app'), (Join-Path $backendDir 'scripts'), (Join-Path $backendDir 'main.py'), (Join-Path $backendDir 'requirements.txt'), "${VmUser}@${VmHost}:${RemoteRoot}/backend/")) -FailureMessage 'Failed to upload backend files.'
     Invoke-Checked -FilePath 'scp' -Arguments ($scpBaseArgs + @('-r', $knowledgeDir, "${VmUser}@${VmHost}:${RemoteRoot}/docs/")) -FailureMessage 'Failed to upload knowledge documents.'
     Invoke-Checked -FilePath 'scp' -Arguments ($scpBaseArgs + @('-r', (Join-Path $frontendDir 'dist'), "${VmUser}@${VmHost}:${RemoteRoot}/")) -FailureMessage 'Failed to upload frontend files.'

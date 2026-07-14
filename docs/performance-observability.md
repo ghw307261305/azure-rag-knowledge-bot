@@ -106,5 +106,5 @@ Invoke-RestMethod http://127.0.0.1:11434/api/generate `
 - CPU-only generation will still be materially slower than GPU inference.
 - Two benchmark prompts are suitable for regression detection, not capacity planning.
 - In-process metrics are not persistent and are not aggregated across multiple workers.
-- CPU percentage is a point-in-time sample; production monitoring should use Prometheus/OpenTelemetry and time-series dashboards.
+- CPU percentage is a point-in-time sample. The repo now includes a Prometheus endpoint, optional OTLP tracing, and a local Collector/Prometheus/Grafana profile; production retention, dashboards, alerting, and multi-worker aggregation remain environment-specific.
 - Further latency reduction should compare a smaller model or GPU before cutting context or output enough to damage groundedness.

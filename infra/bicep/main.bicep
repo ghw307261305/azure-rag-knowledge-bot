@@ -39,6 +39,24 @@ param azureSearchApiKey string
 @description('Azure AI Search index name.')
 param azureSearchIndexName string = 'knowledge-index'
 
+@allowed([
+  'mock'
+  'local'
+  'local_llm'
+  'azure'
+])
+@description('Backend RAG runtime mode. Azure deployments default to the real Azure path.')
+param ragMode string = 'azure'
+
+@description('Repository-relative knowledge directory used by local modes.')
+param knowledgeDir string = 'docs/knowledge-finance'
+
+@description('Enable the local SQLite conversation memory. Keep false on App Service until authenticated durable storage is configured.')
+param enableLocalMemory bool = false
+
+@description('Minimum Azure AI Search score required before answer generation. Calibrate with real Azure evaluation data.')
+param azureMinScore string = '0.01'
+
 @description('Allowed frontend origin for CORS. Leave empty to allow all origins.')
 param frontendUrl string = ''
 
@@ -104,6 +122,9 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
       appSettings: [
         { name: 'APP_ENV', value: 'production' }
         { name: 'LOG_LEVEL', value: 'INFO' }
+        { name: 'RAG_MODE', value: ragMode }
+        { name: 'KNOWLEDGE_DIR', value: knowledgeDir }
+        { name: 'MEMORY_ENABLED', value: string(enableLocalMemory) }
         { name: 'AZURE_OPENAI_ENDPOINT', value: azureOpenAiEndpoint }
         { name: 'AZURE_OPENAI_API_KEY', value: azureOpenAiApiKey }
         { name: 'AZURE_OPENAI_CHAT_DEPLOYMENT', value: azureOpenAiChatDeployment }
@@ -113,6 +134,7 @@ resource appService 'Microsoft.Web/sites@2023-12-01' = {
         { name: 'AZURE_SEARCH_INDEX_NAME', value: azureSearchIndexName }
         { name: 'TOP_K', value: '5' }
         { name: 'MAX_CHUNKS', value: '5' }
+        { name: 'AZURE_MIN_SCORE', value: azureMinScore }
         { name: 'CORS_ORIGIN', value: resolvedFrontendOrigin }
         { name: 'SCM_DO_BUILD_DURING_DEPLOYMENT', value: 'true' }
         { name: 'WEBSITE_RUN_FROM_PACKAGE', value: '1' }

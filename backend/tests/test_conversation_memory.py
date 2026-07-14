@@ -109,3 +109,33 @@ def test_memory_service_upserts_preferences_and_supports_deletion(tmp_path) -> N
     assert items[0].conversation_id == "conversation-new"
     assert service.delete_items("client-12345", "conversation-new") == 1
     assert service.list_items("client-12345") == []
+
+
+def test_memory_service_can_disable_one_request_and_delete_one_item(tmp_path) -> None:
+    service = _service(tmp_path)
+
+    disabled = service.prepare(
+        client_id="client-004",
+        conversation_id="conversation-004",
+        question="请记住：我的部门是法务部",
+        enabled_for_request=False,
+    )
+    assert disabled.stored_items == 0
+    assert service.list_items("client-004") == []
+
+    service.prepare(
+        client_id="client-004",
+        conversation_id="conversation-004",
+        question="请记住：我的部门是法务部",
+    )
+    service.prepare(
+        client_id="client-004",
+        conversation_id="conversation-005",
+        question="请用中文回答",
+    )
+    items = service.list_items("client-004")
+    assert len(items) == 2
+
+    assert service.delete_item("different-client", items[0].id) == 0
+    assert service.delete_item("client-004", items[0].id) == 1
+    assert len(service.list_items("client-004")) == 1

@@ -91,10 +91,20 @@ class ConversationMemoryService:
             self._initialize()
 
     def prepare(
-        self, *, client_id: str | None, conversation_id: str | None, question: str
+        self,
+        *,
+        client_id: str | None,
+        conversation_id: str | None,
+        question: str,
+        enabled_for_request: bool = True,
     ) -> MemoryPreparation:
         sanitized = sanitize_text(question)
-        if not self.enabled or not client_id or not conversation_id:
+        if (
+            not self.enabled
+            or not enabled_for_request
+            or not client_id
+            or not conversation_id
+        ):
             return MemoryPreparation(
                 sanitized_question=sanitized.text,
                 memory_context="",
@@ -177,6 +187,17 @@ class ConversationMemoryService:
                 cursor = connection.execute(
                     "DELETE FROM memory_items WHERE client_id = ?", (client_id,)
                 )
+            connection.commit()
+            return max(0, cursor.rowcount)
+
+    def delete_item(self, client_id: str, item_id: str) -> int:
+        if not self.enabled:
+            return 0
+        with self._connect() as connection:
+            cursor = connection.execute(
+                "DELETE FROM memory_items WHERE client_id = ? AND id = ?",
+                (client_id, item_id),
+            )
             connection.commit()
             return max(0, cursor.rowcount)
 

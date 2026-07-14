@@ -1,14 +1,14 @@
 # Finance Local Generation Evaluation Report
 
-Generated at: `2026-07-13T10:04:00.442303+00:00`
+Generated at: `2026-07-14T04:14:49.633638+00:00`
 
 ## Summary
 
 | Metric | Result |
 |---|---:|
-| Total cases | 16 |
-| Answer / Refusal / Safety | 8 / 4 / 4 |
-| Passed cases | 16 |
+| Total cases | 22 |
+| Answer / Refusal / Safety | 14 / 4 / 4 |
+| Passed cases | 22 |
 | Case pass rate | 100.0% |
 | Generation success rate | 100.0% |
 | Expected source rate | 100.0% |
@@ -18,7 +18,7 @@ Generated at: `2026-07-13T10:04:00.442303+00:00`
 | Numeric grounding rate | 100.0% |
 | Refusal accuracy | 100.0% |
 | Safety block rate | 100.0% |
-| Average / P95 generation latency | 23303 / 32263 ms |
+| Average / P95 generation latency | 36612 / 79228 ms |
 
 ## Quality Gates
 

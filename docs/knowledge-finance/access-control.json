@@ -1,0 +1,59 @@
+{
+  "default": {
+    "department": "finance-operations",
+    "security_level": "internal",
+    "allowed_groups": ["finance-all"]
+  },
+  "documents": {
+    "00-knowledge-base-scope.md": {
+      "department": "governance",
+      "allowed_groups": ["finance-all", "compliance", "risk"]
+    },
+    "05-aml-transaction-monitoring.md": {
+      "department": "compliance",
+      "security_level": "confidential",
+      "allowed_groups": ["compliance", "risk"]
+    },
+    "06-suspicious-transaction-escalation.md": {
+      "department": "compliance",
+      "security_level": "confidential",
+      "allowed_groups": ["compliance", "risk"]
+    },
+    "07-fraud-and-account-takeover.md": {
+      "department": "fraud-risk",
+      "security_level": "confidential",
+      "allowed_groups": ["risk", "security"]
+    },
+    "10-credit-risk-management.md": {
+      "department": "credit-risk",
+      "security_level": "confidential",
+      "allowed_groups": ["risk"]
+    },
+    "13-cybersecurity-incident-response.md": {
+      "department": "information-security",
+      "security_level": "confidential",
+      "allowed_groups": ["security", "risk"]
+    },
+    "16-regulatory-change-management.md": {
+      "department": "compliance",
+      "allowed_groups": ["finance-all", "compliance", "risk"]
+    },
+    "19-internet-banking-authentication.md": {
+      "department": "digital-channel",
+      "allowed_groups": ["finance-all", "security"]
+    },
+    "23-corporate-banking-approval.md": {
+      "department": "corporate-payments",
+      "allowed_groups": ["finance-all", "corporate-ops"]
+    },
+    "24-international-remittance.md": {
+      "department": "international-operations",
+      "security_level": "confidential",
+      "allowed_groups": ["finance-all", "compliance"]
+    },
+    "25-contact-center-routing-and-sla.md": {
+      "department": "customer-service",
+      "allowed_groups": ["finance-all", "customer-service", "security"]
+    }
+  }
+}

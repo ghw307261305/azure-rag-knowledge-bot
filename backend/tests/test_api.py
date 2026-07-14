@@ -11,6 +11,7 @@ from app.services import local_llm_rag_service
 from app.services import rag_service as azure_rag_service
 from app.services.config import get_settings
 from app.services.conversation_memory_service import get_conversation_memory_service
+from app.services.feedback_service import get_feedback_service
 from app.services.local_search_service import get_local_search_service
 from app.services.ollama_service import OllamaUnavailableError
 from app.services.observability_service import get_observability_service
@@ -27,11 +28,13 @@ def _select_rag_mode(monkeypatch, mode: str) -> None:
     get_local_search_service.cache_clear()
     get_conversation_memory_service.cache_clear()
     get_observability_service.cache_clear()
+    get_feedback_service.cache_clear()
 
 
 @pytest.fixture(autouse=True)
 def reset_rag_mode(monkeypatch, tmp_path):
     monkeypatch.setenv("MEMORY_DB_PATH", str(tmp_path / "api-memory.sqlite3"))
+    monkeypatch.setenv("FEEDBACK_DB_PATH", str(tmp_path / "feedback.sqlite3"))
     _select_rag_mode(monkeypatch, "mock")
     yield
     get_settings.cache_clear()
@@ -39,12 +42,14 @@ def reset_rag_mode(monkeypatch, tmp_path):
     get_local_search_service.cache_clear()
     get_conversation_memory_service.cache_clear()
     get_observability_service.cache_clear()
+    get_feedback_service.cache_clear()
 
 
 def test_root() -> None:
-    response = client.get("/")
+    response = client.get("/", headers={"X-Request-ID": "test-request-id"})
     assert response.status_code == 200
     assert "Azure RAG Knowledge Bot API" in response.json()["message"]
+    assert response.headers["X-Request-ID"] == "test-request-id"
 
 
 def test_health() -> None:
@@ -67,6 +72,7 @@ def test_chat(monkeypatch) -> None:
     body = response.json()
 
     assert response.status_code == 200
+    assert body["request_id"] == response.headers["X-Request-ID"]
     assert "モック回答" in body["answer"]
     assert len(body["citations"]) >= 1
     assert len(body["retrieved_chunks"]) >= 1
@@ -327,6 +333,68 @@ def test_memory_can_be_inspected_and_deleted(monkeypatch) -> None:
     assert delete_response.json()["deleted"] == 1
     assert client.get("/api/memory", params={"client_id": client_id}).json()["total"] == 0
 
+
+def test_memory_can_be_disabled_per_request_and_deleted_by_item(monkeypatch) -> None:
+    _select_rag_mode(monkeypatch, "mock")
+    client_id = "client-memory-003"
+    conversation_id = "conversation-003"
+
+    disabled_response = client.post(
+        "/api/chat",
+        json={
+            "question": "请记住：我的部门是风险管理部",
+            "client_id": client_id,
+            "conversation_id": conversation_id,
+            "use_memory": False,
+        },
+    )
+    assert disabled_response.json()["memory_usage"]["enabled"] is False
+    assert client.get("/api/memory", params={"client_id": client_id}).json()["total"] == 0
+
+    client.post(
+        "/api/chat",
+        json={
+            "question": "请记住：我的部门是风险管理部",
+            "client_id": client_id,
+            "conversation_id": conversation_id,
+        },
+    )
+    item = client.get("/api/memory", params={"client_id": client_id}).json()["items"][0]
+    deleted = client.delete(
+        f"/api/memory/items/{item['id']}",
+        params={"client_id": client_id},
+    )
+    assert deleted.status_code == 200
+    assert deleted.json()["deleted"] == 1
+    assert client.get("/api/memory", params={"client_id": client_id}).json()["total"] == 0
+
+
+def test_feedback_accepts_sanitized_reason(monkeypatch) -> None:
+    _select_rag_mode(monkeypatch, "mock")
+    chat_response = client.post(
+        "/api/chat",
+        json={
+            "question": "振込を確認します",
+            "client_id": "client-feedback-001",
+            "conversation_id": "conversation-feedback-001",
+        },
+    )
+    request_id = chat_response.json()["request_id"]
+    assert request_id
+
+    response = client.post(
+        "/api/feedback",
+        json={
+            "request_id": request_id,
+            "client_id": "client-feedback-001",
+            "conversation_id": "conversation-feedback-001",
+            "rating": "unhelpful",
+            "reason": "連絡先 alice@example.com は保存せず引用を改善してほしい",
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["stored"] is True
 
 def test_observability_reports_chat_metrics_and_resources(monkeypatch) -> None:
     _select_rag_mode(monkeypatch, "mock")

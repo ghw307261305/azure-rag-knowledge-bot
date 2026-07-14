@@ -61,6 +61,7 @@ export interface MemoryListResponse {
 }
 
 export interface ChatResponse {
+  request_id: string;
   answer: string;
   citations: Citation[];
   retrieved_chunks: RetrievedChunk[];
@@ -77,6 +78,7 @@ export interface ChatResponse {
 
 export interface Message {
   id: string;
+  request_id?: string;
   question: string;
   answer: string;
   citations: Citation[];
@@ -90,5 +92,6 @@ export interface Message {
   sanitized_question?: string;
   memory_usage?: MemoryUsage;
   generation_metrics?: GenerationMetrics;
+  feedback?: "helpful" | "unhelpful";
   timestamp: Date;
 }

@@ -1,6 +1,7 @@
 """Azure に接続せず、Markdown ナレッジを検索するローカル検索サービス。"""
 
 import math
+import json
 import unicodedata
 from collections import Counter
 from dataclasses import dataclass
@@ -32,6 +33,9 @@ class _IndexedChunk:
     norm: float
     title_terms: frozenset[str]
     section_terms: frozenset[str]
+    department: str
+    security_level: str
+    allowed_groups: frozenset[str]
 
 
 class LocalSearchService:
@@ -50,6 +54,7 @@ class LocalSearchService:
             return len(self._documents)
 
     def rebuild(self) -> int:
+        access_control = _load_access_control(self.knowledge_dir)
         chunks: list[Chunk] = []
         for file_path in sorted(self.knowledge_dir.glob("*.md")):
             chunks.extend(load_and_chunk(file_path))
@@ -73,6 +78,7 @@ class LocalSearchService:
 
         documents: list[_IndexedChunk] = []
         for chunk, counts in zip(chunks, term_counts):
+            metadata = _document_access_metadata(access_control, chunk.source)
             weights = _tf_idf_weights(counts, idf)
             norm = math.sqrt(sum(weight * weight for weight in weights.values()))
             documents.append(
@@ -82,6 +88,9 @@ class LocalSearchService:
                     norm=norm,
                     title_terms=frozenset(_extract_terms(chunk.title)),
                     section_terms=frozenset(_extract_terms(chunk.section)),
+                    department=str(metadata.get("department", "unspecified")),
+                    security_level=str(metadata.get("security_level", "internal")),
+                    allowed_groups=frozenset(metadata.get("allowed_groups", [])),
                 )
             )
 
@@ -90,7 +99,13 @@ class LocalSearchService:
             self._idf = idf
         return len(documents)
 
-    def search(self, query: str, top_k: int = 5) -> list[dict]:
+    def search(
+        self,
+        query: str,
+        top_k: int = 5,
+        *,
+        allowed_groups: set[str] | None = None,
+    ) -> list[dict]:
         if top_k <= 0:
             return []
 
@@ -112,8 +127,10 @@ class LocalSearchService:
             return []
 
         query_terms = frozenset(query_weights)
-        scored: list[tuple[float, Chunk]] = []
+        scored: list[tuple[float, Chunk, _IndexedChunk]] = []
         for document in documents:
+            if not _can_access(document.allowed_groups, allowed_groups):
+                continue
             if document.norm == 0:
                 continue
             dot_product = sum(
@@ -128,7 +145,7 @@ class LocalSearchService:
                 cosine_score + (0.25 * title_score) + (0.10 * section_score),
             )
             if score > 0:
-                scored.append((score, document.chunk))
+                scored.append((score, document.chunk, document))
 
         scored.sort(key=lambda item: (-item[0], item[1].chunk_id))
         return [
@@ -139,9 +156,45 @@ class LocalSearchService:
                 "source": chunk.source,
                 "content": chunk.content,
                 "score": score,
+                "department": document.department,
+                "security_level": document.security_level,
+                "allowed_groups": sorted(document.allowed_groups),
             }
-            for score, chunk in scored[:top_k]
+            for score, chunk, document in scored[:top_k]
         ]
+
+
+def _load_access_control(knowledge_dir: Path) -> dict:
+    metadata_path = knowledge_dir / "access-control.json"
+    if not metadata_path.exists():
+        return {"default": {"allowed_groups": ["*"]}, "documents": {}}
+    try:
+        payload = json.loads(metadata_path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise ValueError(f"Invalid access-control.json: {exc}") from exc
+    if not isinstance(payload, dict):
+        raise ValueError("access-control.json must contain a JSON object")
+    return payload
+
+
+def _document_access_metadata(access_control: dict, source: str) -> dict:
+    default = access_control.get("default", {})
+    documents = access_control.get("documents", {})
+    override = documents.get(source, {}) if isinstance(documents, dict) else {}
+    metadata = {**default, **override}
+    groups = metadata.get("allowed_groups", ["*"])
+    if not isinstance(groups, list) or not all(isinstance(item, str) for item in groups):
+        raise ValueError(f"allowed_groups must be a string list for {source}")
+    metadata["allowed_groups"] = [item.strip() for item in groups if item.strip()]
+    return metadata
+
+
+def _can_access(
+    document_groups: frozenset[str], allowed_groups: set[str] | None
+) -> bool:
+    if allowed_groups is None or "*" in allowed_groups or "*" in document_groups:
+        return True
+    return bool(document_groups & allowed_groups)
 
 
 def _tf_idf_weights(

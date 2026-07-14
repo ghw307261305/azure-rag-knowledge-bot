@@ -45,5 +45,8 @@ def test_observability_aggregates_latency_speed_and_fallback_reasons() -> None:
     assert summary["average_generation_tokens_per_second"] == 20.0
     assert summary["evidence_completion_count"] == 1
     assert summary["evidence_completion_rate"] == 0.5
+    metrics = service.prometheus_text()
+    assert "rag_chat_samples_total 2" in metrics
+    assert "rag_chat_fallback_ratio 0.5" in metrics
     assert service.reset() == 2
     assert service.summary()["sample_count"] == 0

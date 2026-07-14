@@ -14,6 +14,10 @@ class Settings:
     app_env: str
     rag_mode: str
     log_level: str
+    auth_mode: str
+    local_jwt_secret: str
+    local_jwt_issuer: str
+    local_jwt_audience: str
     azure_openai_endpoint: str
     azure_openai_api_key: str
     azure_openai_chat_deployment: str
@@ -24,6 +28,7 @@ class Settings:
     top_k: int
     max_chunks: int
     local_min_score: float
+    azure_min_score: float
     knowledge_dir: str
     ollama_base_url: str
     ollama_model: str
@@ -42,6 +47,11 @@ class Settings:
     memory_preference_ttl_days: int
     memory_fact_ttl_days: int
     memory_max_items: int
+    feedback_db_path: str
+    json_logs: bool
+    otel_enabled: bool
+    otel_service_name: str
+    otel_exporter_endpoint: str
 
 
 def _get_rag_mode() -> str:
@@ -53,12 +63,56 @@ def _get_rag_mode() -> str:
     return mode
 
 
+def _get_auth_mode() -> str:
+    mode = os.getenv("AUTH_MODE", "disabled").strip().lower()
+    supported_modes = {"disabled", "local_jwt"}
+    if mode not in supported_modes:
+        supported = ", ".join(sorted(supported_modes))
+        raise ValueError(f"AUTH_MODE must be one of: {supported}")
+    return mode
+
+
+def validate_settings(settings: Settings) -> None:
+    """Fail fast when the selected runtime mode cannot be started safely."""
+    if settings.rag_mode in {"local", "local_llm"}:
+        knowledge_path = Path(settings.knowledge_dir)
+        if not knowledge_path.is_absolute():
+            knowledge_path = PROJECT_ROOT / knowledge_path
+        if not knowledge_path.is_dir():
+            raise ValueError(f"KNOWLEDGE_DIR does not exist: {knowledge_path}")
+        if not any(knowledge_path.glob("*.md")):
+            raise ValueError(f"KNOWLEDGE_DIR contains no Markdown files: {knowledge_path}")
+
+    if settings.rag_mode == "azure":
+        required = {
+            "AZURE_OPENAI_ENDPOINT": settings.azure_openai_endpoint,
+            "AZURE_OPENAI_API_KEY": settings.azure_openai_api_key,
+            "AZURE_OPENAI_CHAT_DEPLOYMENT": settings.azure_openai_chat_deployment,
+            "AZURE_OPENAI_EMBEDDING_DEPLOYMENT": settings.azure_openai_embedding_deployment,
+            "AZURE_SEARCH_ENDPOINT": settings.azure_search_endpoint,
+            "AZURE_SEARCH_API_KEY": settings.azure_search_api_key,
+            "AZURE_SEARCH_INDEX_NAME": settings.azure_search_index_name,
+        }
+        missing = [name for name, value in required.items() if not value.strip()]
+        if missing:
+            raise ValueError(
+                "Missing required settings for RAG_MODE=azure: " + ", ".join(missing)
+            )
+
+    if settings.auth_mode == "local_jwt" and len(settings.local_jwt_secret) < 32:
+        raise ValueError("LOCAL_JWT_SECRET must contain at least 32 characters")
+
+
 @lru_cache
 def get_settings() -> Settings:
     return Settings(
         app_env=os.getenv("APP_ENV", "local"),
         rag_mode=_get_rag_mode(),
         log_level=os.getenv("LOG_LEVEL", "INFO"),
+        auth_mode=_get_auth_mode(),
+        local_jwt_secret=os.getenv("LOCAL_JWT_SECRET", ""),
+        local_jwt_issuer=os.getenv("LOCAL_JWT_ISSUER", "azure-rag-local"),
+        local_jwt_audience=os.getenv("LOCAL_JWT_AUDIENCE", "azure-rag-api"),
         azure_openai_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT", ""),
         azure_openai_api_key=os.getenv("AZURE_OPENAI_API_KEY", ""),
         azure_openai_chat_deployment=os.getenv("AZURE_OPENAI_CHAT_DEPLOYMENT", ""),
@@ -71,6 +125,7 @@ def get_settings() -> Settings:
         top_k=int(os.getenv("TOP_K", "5")),
         max_chunks=int(os.getenv("MAX_CHUNKS", "5")),
         local_min_score=float(os.getenv("LOCAL_MIN_SCORE", "0.06")),
+        azure_min_score=float(os.getenv("AZURE_MIN_SCORE", "0.01")),
         knowledge_dir=os.getenv("KNOWLEDGE_DIR", "docs/knowledge-finance"),
         ollama_base_url=os.getenv("OLLAMA_BASE_URL", "http://127.0.0.1:11434"),
         ollama_model=os.getenv("OLLAMA_MODEL", "gemma3:4b-it-qat"),
@@ -96,4 +151,17 @@ def get_settings() -> Settings:
         ),
         memory_fact_ttl_days=int(os.getenv("MEMORY_FACT_TTL_DAYS", "30")),
         memory_max_items=int(os.getenv("MEMORY_MAX_ITEMS", "12")),
+        feedback_db_path=os.getenv(
+            "FEEDBACK_DB_PATH", "output/feedback/feedback.sqlite3"
+        ),
+        json_logs=os.getenv("JSON_LOGS", "false").strip().lower()
+        in {"1", "true", "yes", "on"},
+        otel_enabled=os.getenv("OTEL_ENABLED", "false").strip().lower()
+        in {"1", "true", "yes", "on"},
+        otel_service_name=os.getenv(
+            "OTEL_SERVICE_NAME", "azure-rag-knowledge-bot-backend"
+        ),
+        otel_exporter_endpoint=os.getenv(
+            "OTEL_EXPORTER_OTLP_ENDPOINT", "http://127.0.0.1:4318"
+        ),
     )

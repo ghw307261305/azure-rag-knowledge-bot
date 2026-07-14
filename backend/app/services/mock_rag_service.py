@@ -8,7 +8,13 @@ class MockRagService:
     def __init__(self) -> None:
         self.settings = get_settings()
 
-    def answer(self, question: str, *, memory_context: str = "") -> ChatResponse:
+    def answer(
+        self,
+        question: str,
+        *,
+        memory_context: str = "",
+        access_groups: set[str] | None = None,
+    ) -> ChatResponse:
         retrieved_chunks = [
             RetrievedChunk(
                 chunk_id="03-domestic-transfer-operations-004",

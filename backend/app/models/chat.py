@@ -1,3 +1,5 @@
+from typing import Literal
+
 from pydantic import BaseModel, Field
 
 
@@ -29,6 +31,10 @@ class ChatRequest(BaseModel):
         max_length=128,
         pattern=r"^[A-Za-z0-9._:-]+$",
         description="会話識別子",
+    )
+    use_memory: bool = Field(
+        True,
+        description="今回の質問で会話記憶の参照・保存を有効にするか",
     )
 
 
@@ -62,6 +68,7 @@ class GenerationMetrics(BaseModel):
 
 
 class ChatResponse(BaseModel):
+    request_id: str = Field("", description="回答とフィードバックを関連付ける識別子")
     answer: str
     citations: list[Citation]
     retrieved_chunks: list[RetrievedChunk]
@@ -74,3 +81,20 @@ class ChatResponse(BaseModel):
     sanitized_question: str = Field("", description="PII 清洗後の質問")
     memory_usage: MemoryUsage = Field(default_factory=MemoryUsage)
     generation_metrics: GenerationMetrics = Field(default_factory=GenerationMetrics)
+
+
+class FeedbackRequest(BaseModel):
+    request_id: str = Field(..., min_length=8, max_length=128)
+    client_id: str | None = Field(
+        None, min_length=8, max_length=128, pattern=r"^[A-Za-z0-9._:-]+$"
+    )
+    conversation_id: str = Field(
+        ..., min_length=8, max_length=128, pattern=r"^[A-Za-z0-9._:-]+$"
+    )
+    rating: Literal["helpful", "unhelpful"]
+    reason: str = Field("", max_length=500)
+
+
+class FeedbackResponse(BaseModel):
+    status: str = "ok"
+    stored: bool = True

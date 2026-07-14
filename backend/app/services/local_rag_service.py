@@ -15,10 +15,20 @@ LOCAL_FALLBACK_ANSWER = (
 class LocalRagService:
     """生成モデルを使わず、実際のローカル検索結果を原文付きで返す。"""
 
-    def answer(self, question: str, *, memory_context: str = "") -> ChatResponse:
+    def answer(
+        self,
+        question: str,
+        *,
+        memory_context: str = "",
+        access_groups: set[str] | None = None,
+    ) -> ChatResponse:
         started_at = time.perf_counter()
         settings = get_settings()
-        results = get_local_search_service().search(question, top_k=settings.top_k)
+        results = get_local_search_service().search(
+            question,
+            top_k=settings.top_k,
+            allowed_groups=access_groups,
+        )
         top_score = results[0]["score"] if results else 0.0
 
         if not results or top_score < settings.local_min_score:

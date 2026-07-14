@@ -9,6 +9,9 @@
 - Azure AI Search Hybrid Search
 - Azure 非接続で動作するローカル Markdown 検索
 - Ollama / Gemma による完全ローカルの根拠付き回答生成
+- ローカル JWT、ロール、金融文書 ACL による Azure 非依存の権限制御
+- PII 清洗済み会話記憶と回答フィードバックの SQLite 保存
+- Request ID、構造化ログ、Prometheus、任意の OTLP Trace
 - Markdown 知识文档切分与索引构建脚本
 - 本地会话历史保存与调试信息展示
 
@@ -86,6 +89,7 @@ flowchart LR
   - 管理消息列表、loading、error、开发调试面板显示
   - 管理会话历史、新建会话、切换会话、删除会话
   - 将会话数据写入浏览器 `localStorage`
+  - 提供 Memory ON/OFF、单条记忆删除、👍/👎 回答反馈
 - `api.ts`
   - 统一封装对后端 `/api/chat` 的调用
   - 统一处理错误返回
@@ -119,6 +123,12 @@ flowchart LR
   - 负责 Markdown 文档分块
 - `services/config.py`
   - 统一加载 `.env` 配置
+- `services/auth_service.py`
+  - 本地短期 JWT、user / operator / admin、认证用户所有权
+- `services/feedback_service.py`
+  - PII 清洗后的回答反馈持久化
+- `services/logging_service.py` / `telemetry_service.py`
+  - Request ID、JSON 日志、可选 OTLP Trace
 - `models/chat.py`
   - 定义请求响应模型
 
@@ -195,6 +205,7 @@ sequenceDiagram
 - `rag_mode`
 - `model`
 - `fallback_used`
+- `request_id`
 
 这说明当前系统已经不再只是“问一句答一句”的最小 demo，而是具备了调试和可解释性字段。
 
@@ -287,14 +298,16 @@ flowchart TD
 - P5 会话记忆在本地执行 PII 清洗、类型分离、可信度和 TTL 治理
 - P6 对本地生成记录工程耗时、tokens/s、回退原因，并提供 CPU、内存和 Ollama 常驻状态快照
 - 对过早结束的短回答，从已检索原文确定性补充一条未覆盖证据，并单独记录 `evidence_completion_used`
+- 文档 ACL、管理 API 角色保护、请求级记忆开关、单条记忆删除
+- Frontend Vitest、Docker Compose、GitHub CI、本地 Prometheus/Grafana 配置
 
 ### 6.2 当前限制
 
-- 用户认证尚未接入
+- 本地 JWT 已实现，但 Entra ID、MFA、Token 失效与正式用户组尚未接入
 - Azure 服务访问仍以 API Key 为主
 - prompt injection 防护还只是基础关键字检查
 - chunking 规则较简单，目前按二级标题切分
-- 已有开发用进程内 metrics 和资源快照，但尚未接入持久化 tracing、时序数据库与 dashboard
+- 已有 Prometheus endpoint、OTLP Trace 和本地 Dashboard 栈，但生产保存、告警与多进程聚合尚未验证
 - 原始会话历史只保存在浏览器；服务端仅持久化清洗后的结构化 preference / fact
 - 会话记忆 SQLite 尚未加密，匿名 client_id 不是正式身份认证边界
 

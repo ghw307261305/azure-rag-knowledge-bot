@@ -29,6 +29,10 @@ API の起動確認用です。
 }
 ```
 
+すべての HTTP レスポンスには `X-Request-ID` が付与されます。クライアントが同ヘッダーを送信した場合は、その値をログ相関 ID として引き継ぎます。
+
+`AUTH_MODE=local_jwt` の場合、各 API は `Authorization: Bearer <token>` を要求します。`/api/search/debug` と `/api/observability` は operator 以上、`/api/index/rebuild`、`DELETE /api/observability`、`/api/memory/cleanup` は admin のみ実行できます。
+
 ## POST /api/chat
 
 質問を受け取り、`RAG_MODE` に応じて `mock`、`local`、`local_llm`、`azure` の RAG サービスで回答します。`local_llm` はローカル検索結果だけを根拠として Ollama/Gemma で回答し、引用番号を検証します。生成に失敗した場合は検索原文へ安全に回退します。
@@ -39,7 +43,8 @@ API の起動確認用です。
 {
   "question": "振込はいつまで取り消せますか。",
   "client_id": "browser-550e8400-e29b-41d4-a716-446655440000",
-  "conversation_id": "conversation-001"
+  "conversation_id": "conversation-001",
+  "use_memory": true
 }
 ```
 
@@ -47,6 +52,7 @@ API の起動確認用です。
 
 ```json
 {
+  "request_id": "550e8400-e29b-41d4-a716-446655440000",
   "answer": "受付状態が RECEIVED の場合は取消可能です。[S1]",
   "citations": [
     {
@@ -98,7 +104,7 @@ API の起動確認用です。
 }
 ```
 
-`client_id` と `conversation_id` は任意です。両方がある場合のみ会話記憶を保存・参照します。質問は PII 清洗後に検索と生成へ渡され、清洗結果を `sanitized_question` で返します。
+`client_id` と `conversation_id` は任意です。両方があり、`use_memory=true` の場合だけ会話記憶を保存・参照します。認証時は Token の `sub` を所有者として使用し、送信された `client_id` で他ユーザーの記憶へアクセスできません。質問は PII 清洗後に検索と生成へ渡され、清洗結果を `sanitized_question` で返します。
 
 `generation_metrics` は `local_llm` の生成工程を分解した値です。Ollama が返す nanosecond 指標を ms に変換し、モデルロード、Prompt 評価、Token 生成を個別表示します。回退時は `fallback_reason` に `insufficient_retrieval`、`ollama_unavailable`、`invalid_model_response`、`generation_error` のいずれかが入ります。小型モデルが一文だけで終了し、検索原文から不足条件を決定論的に追加した場合は `evidence_completion_used=true` になります。
 
@@ -119,6 +125,24 @@ DELETE /api/memory?client_id=...&conversation_id=...
 DELETE /api/memory?client_id=...
 ```
 
+## DELETE /api/memory/items/{item_id}
+
+指定した一件の記憶だけを削除します。所有者が一致しない場合は削除しません。
+
+## POST /api/feedback
+
+Chat の `request_id` に対して `helpful` / `unhelpful` と任意理由を保存します。理由は保存前に PII 清洗されます。
+
+```json
+{
+  "request_id": "550e8400-e29b-41d4-a716-446655440000",
+  "client_id": "browser-550e8400-e29b-41d4-a716-446655440000",
+  "conversation_id": "conversation-001",
+  "rating": "unhelpful",
+  "reason": "引用箇所をもう少し具体的にしてほしい"
+}
+```
+
 ## POST /api/memory/cleanup
 
 有効期限を過ぎた記憶を SQLite から削除します。通常は Chat 処理時にも自動実行されます。
@@ -133,6 +157,10 @@ DELETE /api/memory?client_id=...
 - `resources.ollama`: Ollama プロセスと `/api/ps` が返す常駐モデル、モデルサイズ、VRAM、Context、失効時刻
 
 この集計は開発用であり、バックエンド再起動時に消えます。
+
+## GET /api/metrics
+
+Chat 件数、Fallback 率、P50/P95、生成速度を Prometheus text format で返します。機微な質問本文や PII は含みません。本番ではネットワーク境界で取得元を制限します。
 
 ## DELETE /api/observability
 

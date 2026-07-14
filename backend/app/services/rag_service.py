@@ -19,10 +19,11 @@ from app.services.search_service import hybrid_search
 logger = logging.getLogger(__name__)
 
 FALLBACK_ANSWER = "現在の資料では、ご質問に対する十分な情報が見つかりませんでした。関連部署にお問い合わせください。"
-MIN_SCORE_THRESHOLD = 0.01
 
 
-def answer(question: str) -> ChatResponse:
+def answer(
+    question: str, *, access_groups: set[str] | None = None
+) -> ChatResponse:
     """
     ユーザーの質問に対してRAGで回答する。
 
@@ -54,7 +55,7 @@ def answer(question: str) -> ChatResponse:
     logger.info(f"検索結果: {len(raw_chunks)}件 (top score: {top_score:.3f})")
 
     # 4. スコア閾値未満はフォールバック
-    if not raw_chunks or top_score < MIN_SCORE_THRESHOLD:
+    if not raw_chunks or top_score < s.azure_min_score:
         logger.info("スコア閾値未満のためフォールバック回答を返す")
         latency_ms = int((time.perf_counter() - start) * 1000)
         return ChatResponse(

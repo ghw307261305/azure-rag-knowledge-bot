@@ -10,14 +10,26 @@ from app.services.mock_rag_service import MockRagService
 
 
 class RagService(Protocol):
-    def answer(self, question: str, *, memory_context: str = "") -> ChatResponse: ...
+    def answer(
+        self,
+        question: str,
+        *,
+        memory_context: str = "",
+        access_groups: set[str] | None = None,
+    ) -> ChatResponse: ...
 
 
 class AzureRagService:
     """Adapter for the existing Azure-backed RAG orchestration module."""
 
-    def answer(self, question: str, *, memory_context: str = "") -> ChatResponse:
-        return azure_rag_service.answer(question)
+    def answer(
+        self,
+        question: str,
+        *,
+        memory_context: str = "",
+        access_groups: set[str] | None = None,
+    ) -> ChatResponse:
+        return azure_rag_service.answer(question, access_groups=access_groups)
 
 
 @lru_cache

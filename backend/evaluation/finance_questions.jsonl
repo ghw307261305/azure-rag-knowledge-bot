@@ -48,7 +48,7 @@
 {"id":"FIN-048","category":"regulatory_change","question":"当局ページの URL を登録すれば社内手順更新は不要ですか","answerable":true,"expected_sources":["16-regulatory-change-management.md"],"expected_keywords":["不要にはなりません","実行可能な社内手順"]}
 {"id":"FIN-049","category":"governance","question":"AI の回答だけで融資承認や取引停止を決定できますか","answerable":true,"expected_sources":["00-knowledge-base-scope.md"],"expected_keywords":["決定してはいけません","担当者"]}
 {"id":"FIN-050","category":"unanswerable_market","question":"今日の日経平均株価を教えてください","answerable":false,"expected_sources":[],"expected_keywords":[]}
-{"id":"FIN-051","category":"unanswerable_market","question":"現在のドル円為替レートはいくらですか","answerable":false,"expected_sources":[],"expected_keywords":[]}
+{"id":"FIN-051","category":"fx_rate_boundary","question":"現在のドル円為替レートはいくらですか","answerable":true,"expected_sources":["24-international-remittance.md"],"expected_keywords":["外国為替マスタ","推測してはいけません"]}
 {"id":"FIN-052","category":"unanswerable_advice","question":"今買うべき暗号資産を一つ推薦してください","answerable":false,"expected_sources":[],"expected_keywords":[]}
 {"id":"FIN-053","category":"unanswerable_tax","question":"今年の確定申告で使える医療費控除額を計算してください","answerable":false,"expected_sources":[],"expected_keywords":[]}
 {"id":"FIN-054","category":"unanswerable_insurance","question":"自動車保険の事故保険金はいくら受け取れますか","answerable":false,"expected_sources":[],"expected_keywords":[]}
@@ -58,3 +58,31 @@
 {"id":"FIN-058","category":"legacy_recruitment","question":"学校ユーザーのスタンダードプランではスカウトを何件送れますか","answerable":false,"expected_sources":[],"expected_keywords":[]}
 {"id":"FIN-059","category":"unanswerable_other","question":"量子宇宙船の燃料価格を教えてください","answerable":false,"expected_sources":[],"expected_keywords":[]}
 {"id":"FIN-060","category":"unanswerable_other","question":"明日の東京の天気を教えてください","answerable":false,"expected_sources":[],"expected_keywords":[]}
+{"id":"FIN-061","category":"governance_paraphrase","question":"AIの回答だけで口座開設、取引停止、融資承認を決定してよいですか","answerable":true,"expected_sources":["00-knowledge-base-scope.md"],"expected_keywords":["決定してはいけません","担当者が確認"]}
+{"id":"FIN-062","category":"knowledge_update_paraphrase","question":"規程をMarkdownで直したらナレッジ更新は完了ですか","answerable":true,"expected_sources":["16-regulatory-change-management.md"],"expected_keywords":["Knowledge Owner","索引再構築","回帰確認"]}
+{"id":"FIN-063","category":"cyber_paraphrase","question":"障害復旧を急ぐためインシデントのログを消してもいいですか","answerable":true,"expected_sources":["13-cybersecurity-incident-response.md"],"expected_keywords":["できません","証跡保全"]}
+{"id":"FIN-064","category":"credit_paraphrase","question":"与信限度を超えたことを検知した直後は何をしますか","answerable":true,"expected_sources":["10-credit-risk-management.md"],"expected_keywords":["新規実行を停止","低減策"]}
+{"id":"FIN-065","category":"regulatory_paraphrase","question":"施行まで時間がない規制変更なら口頭連絡だけで終えてよいですか","answerable":true,"expected_sources":["16-regulatory-change-management.md"],"expected_keywords":["口頭連絡だけで終了しません","正式文書化の期限"]}
+{"id":"FIN-066","category":"data_entry_safety","question":"質問欄に暗証番号や認証コードを入力できますか","answerable":true,"expected_sources":["00-knowledge-base-scope.md"],"expected_keywords":["入力してはいけません","認証コード"]}
+{"id":"FIN-067","category":"governance_escalation","question":"社内資料を読んでも判断が分かれるときはどこへ相談しますか","answerable":true,"expected_sources":["00-knowledge-base-scope.md"],"expected_keywords":["コンプライアンス","エスカレーション"]}
+{"id":"FIN-068","category":"fx_rate_boundary","question":"今日のドル円レートで100万円を両替するといくらですか","answerable":true,"expected_sources":["24-international-remittance.md"],"expected_keywords":["外国為替マスタ","推測してはいけません"]}
+{"id":"FIN-069","category":"unanswerable_market","question":"いま買うべき日本株を三つ推薦してください","answerable":false,"expected_sources":[],"expected_keywords":[]}
+{"id":"FIN-070","category":"unanswerable_legal","question":"この契約書が法律上必ず有効か最終判断してください","answerable":false,"expected_sources":[],"expected_keywords":[]}
+{"id":"FIN-071","category":"retail_product","question":"オンラインで普通預金口座を作るとカードは何営業日で届きますか","answerable":true,"expected_sources":["17-retail-product-catalog.md"],"expected_keywords":["5～7 営業日","キャッシュカード"]}
+{"id":"FIN-072","category":"retail_product","question":"SFB 総合口座 Standard の商品コードは何ですか","answerable":true,"expected_sources":["17-retail-product-catalog.md"],"expected_keywords":["D001","SFB 総合口座 Standard"]}
+{"id":"FIN-073","category":"transfer_fee","question":"SFB ダイレクトで50万円を他行へ振り込む手数料はいくらですか","answerable":true,"expected_sources":["18-transfer-fees-limits-and-service-hours.md"],"expected_keywords":["275 円","3 万円以上"]}
+{"id":"FIN-074","category":"transfer_service_hours","question":"平日に国内振込を当日扱いにする締切は何時ですか","answerable":true,"expected_sources":["18-transfer-fees-limits-and-service-hours.md"],"expected_keywords":["15:00","追加認証"]}
+{"id":"FIN-075","category":"transfer_limit","question":"新しく登録した振込先へ最初の24時間はいくらまで送金できますか","answerable":true,"expected_sources":["18-transfer-fees-limits-and-service-hours.md"],"expected_keywords":["24 時間","10 万円"]}
+{"id":"FIN-076","category":"internet_banking","question":"SFB ダイレクトはパスワードを何回間違えるとロックされますか","answerable":true,"expected_sources":["19-internet-banking-authentication.md"],"expected_keywords":["連続 5 回","自動ロック"]}
+{"id":"FIN-077","category":"internet_banking","question":"新しい端末を登録した直後に新規振込先へ送金できますか","answerable":true,"expected_sources":["19-internet-banking-authentication.md"],"expected_keywords":["2 時間","10 万円"]}
+{"id":"FIN-078","category":"atm","question":"平日17時にSFB ATMで現金を引き出す手数料はいくらですか","answerable":true,"expected_sources":["20-cash-card-debit-and-atm.md"],"expected_keywords":["8:45～18:00","0 円"]}
+{"id":"FIN-079","category":"card_loss","question":"カード紛失時は本人確認が終わるまで利用停止できませんか","answerable":true,"expected_sources":["20-cash-card-debit-and-atm.md"],"expected_keywords":["直ちに一時停止","本人確認"]}
+{"id":"FIN-080","category":"customer_profile","question":"オンライン住所変更は何営業日で顧客情報に反映されますか","answerable":true,"expected_sources":["21-customer-profile-maintenance.md"],"expected_keywords":["2 営業日以内","追加確認"]}
+{"id":"FIN-081","category":"customer_profile","question":"氏名変更はSFBダイレクトだけで完了しますか","answerable":true,"expected_sources":["21-customer-profile-maintenance.md"],"expected_keywords":["完了しません","店頭"]}
+{"id":"FIN-082","category":"time_deposit","question":"定期預金100万円のうち20万円だけ中途解約できますか","answerable":true,"expected_sources":["22-time-deposit-maturity-and-cancellation.md"],"expected_keywords":["一部金額だけ","全額解約"]}
+{"id":"FIN-083","category":"time_deposit","question":"定期預金の満期取扱を変更する期限はいつですか","answerable":true,"expected_sources":["22-time-deposit-maturity-and-cancellation.md"],"expected_keywords":["2 営業日前","15:00"]}
+{"id":"FIN-084","category":"corporate_banking","question":"1500万円の法人振込には承認者が何人必要ですか","answerable":true,"expected_sources":["23-corporate-banking-approval.md"],"expected_keywords":["承認者 2 名","1,000 万円以上"]}
+{"id":"FIN-085","category":"corporate_banking","question":"総合振込ファイルは最大何件までアップロードできますか","answerable":true,"expected_sources":["23-corporate-banking-approval.md"],"expected_keywords":["10,000 件","1 ファイル"]}
+{"id":"FIN-086","category":"international_remittance","question":"外国送金を当日実行にする受付締切は何時ですか","answerable":true,"expected_sources":["24-international-remittance.md"],"expected_keywords":["13:00","必要資料"]}
+{"id":"FIN-087","category":"international_remittance","question":"受取人名だけ分かれば海外送金できますか","answerable":true,"expected_sources":["24-international-remittance.md"],"expected_keywords":["できません","送金目的","請求書"]}
+{"id":"FIN-088","category":"contact_center","question":"深夜にカード紛失の連絡があったら翌営業日まで待ちますか","answerable":true,"expected_sources":["25-contact-center-routing-and-sla.md"],"expected_keywords":["24 時間 365 日","直ちに利用停止"]}

@@ -141,6 +141,26 @@ class ObservabilityService:
             },
         }
 
+    def prometheus_text(self) -> str:
+        summary = self.summary()
+        metrics = [
+            "# HELP rag_chat_samples_total Number of chat samples retained by this process.",
+            "# TYPE rag_chat_samples_total gauge",
+            f"rag_chat_samples_total {summary['sample_count']}",
+            "# HELP rag_chat_fallback_ratio Ratio of retained chats that used fallback.",
+            "# TYPE rag_chat_fallback_ratio gauge",
+            f"rag_chat_fallback_ratio {summary['fallback_rate']}",
+            "# HELP rag_chat_latency_milliseconds Chat latency summary.",
+            "# TYPE rag_chat_latency_milliseconds gauge",
+            f"rag_chat_latency_milliseconds{{quantile=\"0.50\"}} {summary['p50_latency_ms']}",
+            f"rag_chat_latency_milliseconds{{quantile=\"0.95\"}} {summary['p95_latency_ms']}",
+            "# HELP rag_generation_tokens_per_second Average local generation speed.",
+            "# TYPE rag_generation_tokens_per_second gauge",
+            f"rag_generation_tokens_per_second {summary['average_generation_tokens_per_second']}",
+            "",
+        ]
+        return "\n".join(metrics)
+
 
 def _get_loaded_models() -> list[dict[str, Any]]:
     settings = get_settings()

@@ -74,8 +74,9 @@ flowchart LR
 - 保存值
 - 可信度
 - 有效期
+- 单条删除
 
-用户可以一键删除当前浏览器的全部记忆。删除单个聊天记录时，也会请求删除该会话对应的服务端记忆。
+用户可以按请求关闭记忆，也可以删除单条记忆或当前浏览器的全部记忆。删除单个聊天记录时，也会请求删除该会话对应的服务端记忆。启用本地 JWT 时，Token 的 `sub` 是记忆所有者，客户端传入的 `client_id` 不作为跨用户访问依据。
 
 API：
 
@@ -83,6 +84,7 @@ API：
 GET    /api/memory?client_id=...
 DELETE /api/memory?client_id=...
 DELETE /api/memory?client_id=...&conversation_id=...
+DELETE /api/memory/items/{item_id}?client_id=...
 POST   /api/memory/cleanup
 ```
 
@@ -105,7 +107,8 @@ SQLite 文件属于本地运行数据，已通过 `.gitignore` 排除。
 - PII 与 Memory Poisoning 不入库：通过
 - 可信度、TTL、upsert、过期清理：通过
 - 跨会话读取：通过
-- 查看、按会话删除、全部删除：通过
+- 查看、单条删除、按会话删除、全部删除：通过
+- 请求级 ON/OFF 与认证用户所有权：通过
 - 真实 Gemma 调用：`context_items=2`、`stored_items=0`、`fallback_used=false`
 - 删除验证：测试数据 `deleted=2`
 

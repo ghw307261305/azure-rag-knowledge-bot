@@ -1,6 +1,13 @@
 import { KeyboardEvent, useEffect, useRef, useState } from "react";
 
-import { ApiError, clearMemory, getMemory, sendQuestion } from "./api";
+import {
+  ApiError,
+  clearMemory,
+  deleteMemoryItem,
+  getMemory,
+  sendQuestion,
+  submitFeedback,
+} from "./api";
 import type { MemoryItem, Message } from "./types";
 
 // ── 会話セッション型 ────────────────────────────────────────
@@ -13,6 +20,7 @@ interface Conversation {
 
 const STORAGE_KEY = "rag_conversations";
 const CLIENT_ID_KEY = "rag_client_id";
+const MEMORY_PREFERENCE_KEY = "rag_memory_enabled";
 const MAX_HISTORY = 30;
 
 function sanitizeLocalHistoryText(value: string): string {
@@ -140,6 +148,10 @@ function getOrCreateClientId(): string {
   return created;
 }
 
+function loadMemoryPreference(): boolean {
+  return localStorage.getItem(MEMORY_PREFERENCE_KEY) !== "false";
+}
+
 function getDisplayError(error: unknown): string {
   if (error instanceof ApiError) {
     return error.message;
@@ -160,11 +172,12 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showDev, setShowDev] = useState(false);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 800);
   const [showMemory, setShowMemory] = useState(false);
   const [memoryItems, setMemoryItems] = useState<MemoryItem[]>([]);
   const [memoryLoading, setMemoryLoading] = useState(false);
   const [memoryError, setMemoryError] = useState("");
+  const [memoryEnabled, setMemoryEnabled] = useState(loadMemoryPreference);
 
   const bottomRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -195,10 +208,12 @@ export default function App() {
       const res = await sendQuestion(
         q,
         clientIdRef.current,
-        requestConversationId
+        requestConversationId,
+        memoryEnabled
       );
       const newMsg = {
         id: generateId(),
+        request_id: res.request_id,
         question: res.sanitized_question || q,
         answer: res.answer,
         citations: res.citations,
@@ -315,6 +330,61 @@ export default function App() {
     }
   }
 
+  function toggleMemory() {
+    setMemoryEnabled((current) => {
+      const next = !current;
+      localStorage.setItem(MEMORY_PREFERENCE_KEY, String(next));
+      return next;
+    });
+  }
+
+  async function removeMemoryItem(itemId: string) {
+    setMemoryLoading(true);
+    setMemoryError("");
+    try {
+      await deleteMemoryItem(clientIdRef.current, itemId);
+      setMemoryItems((current) => current.filter((item) => item.id !== itemId));
+    } catch (memoryDeleteError) {
+      setMemoryError(getDisplayError(memoryDeleteError));
+    } finally {
+      setMemoryLoading(false);
+    }
+  }
+
+  async function rateMessage(
+    message: Message,
+    rating: "helpful" | "unhelpful"
+  ) {
+    if (!message.request_id || !activeConvIdRef.current) return;
+    const reason = rating === "unhelpful"
+      ? window.prompt("改善してほしい点があれば入力してください（任意）", "") ?? ""
+      : "";
+    try {
+      await submitFeedback(
+        message.request_id,
+        clientIdRef.current,
+        activeConvIdRef.current,
+        rating,
+        reason
+      );
+      const updatedMessages = messagesRef.current.map((item) =>
+        item.id === message.id ? { ...item, feedback: rating } : item
+      );
+      setMessages(updatedMessages);
+      setConversations((current) => {
+        const updated = current.map((conversation) =>
+          conversation.id === activeConvIdRef.current
+            ? { ...conversation, messages: updatedMessages }
+            : conversation
+        );
+        saveConversations(updated);
+        return updated;
+      });
+    } catch (feedbackError) {
+      setError(getDisplayError(feedbackError));
+    }
+  }
+
   // Group conversations by date label
   const groupedConvs = conversations.reduce<Record<string, Conversation[]>>((acc, c) => {
     const label = formatDate(c.createdAt);
@@ -345,6 +415,15 @@ export default function App() {
         </div>
         <div className="navbar-right">
           <span className="navbar-badge">Financial RAG PoC</span>
+          <button
+            type="button"
+            className={`memory-toggle ${memoryEnabled ? "active" : ""}`}
+            onClick={toggleMemory}
+            aria-pressed={memoryEnabled}
+            title="このブラウザから送る質問で会話記憶を使用するか切り替え"
+          >
+            Memory {memoryEnabled ? "ON" : "OFF"}
+          </button>
           <button
             type="button"
             className={`dev-toggle ${showMemory ? "active" : ""}`}
@@ -472,6 +551,29 @@ export default function App() {
                             <span>{c.title}</span>
                           </div>
                         ))}
+                      </div>
+                    )}
+
+                    {msg.request_id && (
+                      <div className="feedback-row" aria-label="回答フィードバック">
+                        <span>この回答は役に立ちましたか？</span>
+                        <button
+                          type="button"
+                          className={msg.feedback === "helpful" ? "active" : ""}
+                          onClick={() => void rateMessage(msg, "helpful")}
+                          aria-label="役に立った"
+                        >
+                          👍
+                        </button>
+                        <button
+                          type="button"
+                          className={msg.feedback === "unhelpful" ? "active" : ""}
+                          onClick={() => void rateMessage(msg, "unhelpful")}
+                          aria-label="改善が必要"
+                        >
+                          👎
+                        </button>
+                        {msg.feedback && <small>送信済み</small>}
                       </div>
                     )}
 
@@ -673,7 +775,17 @@ export default function App() {
                   <article key={item.id} className="memory-item">
                     <div className="memory-item-meta">
                       <span className={`memory-kind ${item.kind}`}>{item.kind}</span>
-                      <span>信頼度 {Math.round(item.confidence * 100)}%</span>
+                      <div className="memory-item-actions">
+                        <span>信頼度 {Math.round(item.confidence * 100)}%</span>
+                        <button
+                          type="button"
+                          onClick={() => void removeMemoryItem(item.id)}
+                          aria-label={`${item.key} を削除`}
+                          title="この記憶だけを削除"
+                        >
+                          <TrashIcon />
+                        </button>
+                      </div>
                     </div>
                     <strong>{item.key}</strong>
                     <p>{item.value}</p>

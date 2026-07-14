@@ -2,7 +2,7 @@
 
 本ドキュメントは、金融機関の業務ナレッジ管理を高度化する RAG 型オンライン質疑応答システムについて、**案件背景、業務課題、PoC 実装、技術判断、評価方法、本番化設計、セキュリティ、運用、顧客説明**を一つのケースとして整理したものです。
 
-> **資料の位置づけ（2026-07-13 時点）**
+> **資料の位置づけ（2026-07-14 時点）**
 > 本ケースは、リポジトリ内で実装したローカル優先 PoC と、その先の本番化アーキテクチャを組み合わせた説明資料です。実装済み機能と本番化の設計構想を明確に区別し、未実施のクラウド配備、セキュリティ審査、実ユーザー UAT、業務効果測定を完了済みとして扱いません。
 
 | 表記 | 意味 |
@@ -32,8 +32,8 @@
 
 本システムは AI に最終判断を任せるものではありません。利用者が社内資料を早く見つけ、根拠を確認し、回答や調査の初稿を作るための支援基盤です。
 
-- **PoC で確認すること**：技術的に回答できるか、検索結果に根拠があるか、対象業務で時間短縮につながるか。
-- **本番化で追加すること**：認証・認可、部門別アクセス制御、閉域化、監査ログ、監視、フィードバック運用、CI/CD。
+- **PoC で確認すること**：技術的に回答できるか、検索結果に根拠があるか、対象業務で時間短縮につながるか。ローカル環境では JWT 認証、役割制御、文書 ACL、構造化ログ、メトリクス、フィードバック、CI まで技術検証済みです。
+- **本番化で追加・検証すること**：Entra ID、Azure RBAC、Managed Identity、Key Vault、閉域化、クラウド監視、デプロイ自動化、セキュリティ審査、実ユーザー UAT。
 - **人が担うこと**：顧客対応、融資・審査、投資判断、本人確認、マネー・ローンダリング対策、取引・支払などの最終確認と承認。
 
 ---
@@ -143,29 +143,150 @@ PoC では最低限、次の評価セットを準備します。
 
 ---
 
-## 5. 実装内容と現在地
+## 5. 実装内容と現状
 
 ### 5.1 現在の PoC で実装済み
 
 | 領域 | 実装内容 | 状態 |
 |------|------|------|
-| フロントエンド | React + TypeScript のチャット UI、引用、会話履歴、デバッグ情報表示 | **実装済み** |
-| API | FastAPI、`/api/chat`、`/api/health`、検索・インデックス関連 API | **実装済み** |
+| フロントエンド | React + TypeScript のチャット UI、引用、履歴、Memory ON/OFF・単一削除、回答フィードバック、レスポンシブ表示 | **実装済み** |
+| API | FastAPI、Chat、Health、Memory、Feedback、Metrics、検索・インデックス関連 API | **実装済み** |
 | RAG | Query Rewrite → Embedding → Hybrid Search → 回答生成 → Citation | **実装済み** |
-| 検索 | Azure AI Search の Keyword + Vector Search | **実装済み** |
-| ナレッジ投入 | 汎用サンプル Markdown の読込、見出し単位 Chunk、Metadata、Embedding、Index Upload | **実装済み** |
+| 検索 | Azure AI Search の Keyword + Vector Search と、Azure 非接続時のローカル検索 | **実装済み** |
+| ナレッジ投入 | Markdown 読込、見出し・自然境界 Chunk、重複 ID 防止、Metadata、Embedding、Index Upload | **実装済み** |
+| 文書アクセス制御 | ローカル JWT の group と `access-control.json` を用いた検索前 ACL Filter | **実装済み** |
+| 認証・認可 | HS256 Local JWT、`user` / `operator` / `admin`、管理 API の Role 制御、記憶所有者の `sub` 固定 | **実装済み** |
+| 会話記憶ガバナンス | PII マスキング、preference / fact 分離、信頼度、TTL、SQLite、ON/OFF、単一・会話・全件削除 | **実装済み** |
+| 品質フィードバック | 👍/👎 と任意理由を PII クレンジング後に SQLite へ保存 | **実装済み** |
+| 可観測性 | Request ID、JSON Log、Prometheus Metrics、任意の OpenTelemetry OTLP Export | **実装済み** |
+| 開発・配布 | Backend / Frontend Docker、Docker Compose、GitHub Actions CI、Dependabot、一括検証 Script | **実装済み** |
 | 安全対策 | 基本的な Prompt Injection パターンチェック | **一部実装** |
 | IaC | App Service を中心とした Bicep の初期定義 | **一部実装** |
-| 認証・監査・閉域化 | Entra ID、RBAC、Managed Identity、監視、Private Endpoint | **本番化設計** |
+| Azure 本番セキュリティ | Entra ID、Azure RBAC、Managed Identity、Key Vault、Private Endpoint、クラウド監査 | **本番化設計** |
 
-### 5.2 2026-07-13 の検証記録
+### 回答画面（ローカル PoC）
+
+![金融ナレッジ Chatbot の回答画面。50 万円の他行振込について、手数料 275 円、当日扱い 15 時、引用資料、ローカルモデル名を表示](assets/chatbot-answer-page-local-llm.png)
+
+*図 1. ローカル金融ナレッジを検索し、`gemma3:4b-it-qat` が手数料、当日扱いの締切、注意事項を根拠番号付きで生成した Chatbot 画面。`local_llm`、モデル名、引用資料、フィードバック導線を同一画面で確認できます。*
+
+### 5.2 P5：会話記憶ガバナンスの設計要件（実装済み）
+
+#### 5.2.1 目的と設計方針
+
+P5 の目的は、会話全文を無条件に再利用することではなく、次回以降の対話に必要な情報だけを、PII と不正な指示を除去したうえで構造化して保持することです。金融業務における誤記憶、機密情報の残存、Memory Poisoning、古い情報の継続利用を抑えるため、次の方針を採用します。
+
+- 元の会話全文およびモデル回答は、サーバー側の長期記憶として保存しない。
+- 保存対象を明示的な `preference` と `fact` に限定する。
+- PII マスキング後の値だけを後続処理へ渡し、PII を含む記憶候補は保存しない。
+- 記憶は金融規程、商品条件、審査・取引判断の根拠として使用しない。
+- 金融ナレッジ検索結果を常に会話記憶より優先し、会話記憶を Citation にしない。
+- 信頼度、有効期限、保存上限、参照、削除を管理し、利用者が記憶状態を確認できるようにする。
+
+#### 5.2.2 機能要件
+
+| ID | 要件 | 実装内容 | 受入条件 |
+|------|------|------|------|
+| MEM-01 | 利用者・会話識別 | Local JWT 有効時は Token の `sub` を所有者とし、開発用の認証無効時だけブラウザ `client_id` を使用する | クライアント指定による他利用者の記憶参照を防ぎつつ、同一利用者の別会話で再利用できる |
+| MEM-02 | 入力クレンジング | NFKC 正規化、制御・ゼロ幅文字除去、HTML 除去、連続文字圧縮、2,000 文字制限を適用する | クリーンな `sanitized_question` が検索・生成へ渡る |
+| MEM-03 | PII マスキング | メール、電話、郵便番号、明示的な口座・顧客番号、10～19 桁数字をプレースホルダーへ置換する | 元の値が SQLite と新規ブラウザ履歴へ残らない |
+| MEM-04 | 記憶分類 | 回答言語・詳しさを `preference`、明示的な「覚えて」情報を `fact` として抽出する | 通常の質問から長期 Fact を推測しない |
+| MEM-05 | 信頼度 | 言語 preference 0.90、回答スタイル 0.85、明示 Fact 0.90 を付与する | UI/API で信頼度を確認できる |
+| MEM-06 | Poisoning 防止 | Prompt Injection、System Prompt 抽出、指示上書き表現を含む候補を破棄する | 危険候補が保存されず、次回 Prompt の命令に昇格しない |
+| MEM-07 | 永続化 | ローカル SQLite に構造化記憶だけを Upsert する | `client_id + kind + memory_key` の重複・競合を抑止できる |
+| MEM-08 | TTL | preference は 90 日、fact は 30 日を既定とし、更新時に期限を更新する | 期限切れ記憶が参照されず、清掃 API で削除できる |
+| MEM-09 | 参照上限 | preference 優先、信頼度・更新日時順で最大 12 件を取得する | Prompt へ過剰な記憶を投入しない |
+| MEM-10 | モデル利用境界 | 記憶を `<governed_memory>` として不信頼な補助データに分離する | Fact が金融判断根拠や `[S#]` Citation にならない |
+| MEM-11 | ユーザー制御 | Memory ON/OFF、記憶一覧、単一・会話単位・利用者全件削除を API/UI で提供する | 利用者が保存・参照を止め、内容と期限を確認して必要な単位で削除できる |
+| MEM-12 | 可観測性 | 参照数、保存数、PII 種別、破棄数を Chat 応答へ返す | 開発画面と API で今回の記憶処理を確認できる |
+
+#### 5.2.3 処理フロー
+
+```mermaid
+flowchart LR
+    input[ユーザー入力] --> gate[Prompt Injection 初期チェック]
+    gate --> clean[Unicode・不要データクレンジング]
+    clean --> pii[PII マスキング]
+    pii --> classify[ホワイトリスト記憶抽出]
+    classify --> safe[PII・Memory Poisoning 判定]
+    safe --> pref[preference\n90 日]
+    safe --> fact[fact\n30 日]
+    pref --> db[(ローカル SQLite)]
+    fact --> db
+    db --> active[有効期限・上限・信頼度順で取得]
+    active --> memory[governed_memory]
+    pii --> retrieval[金融ナレッジ検索]
+    retrieval --> prompt[Gemma Prompt]
+    memory --> prompt
+    prompt --> response[回答 + memory_usage]
+```
+
+#### 5.2.4 保存対象と保存禁止対象
+
+| 区分 | 保存例 | 信頼度 | 既定 TTL | 利用目的 |
+|------|------|------:|------:|------|
+| `preference / response_language` | 中国語（内部値：中文）、日本語、英語 | 0.90 | 90 日 | 回答言語だけを調整 |
+| `preference / answer_style` | concise、detailed | 0.85 | 90 日 | 回答の詳しさだけを調整 |
+| `fact / explicit_<hash>` | 「覚えておいて：所属部門はリスク管理部」 | 0.90 | 30 日 | 低リスクな利用者文脈の補助 |
+
+保存しない情報は、元の会話全文、モデル回答、暗黙推論した属性、メール、電話、郵便番号、口座・顧客番号、長い数値列、PII プレースホルダーを含む候補、Prompt Injection、System Prompt 抽出要求です。Fact の信頼度は抽出確度を表し、内容の真実性を保証するものではありません。
+
+#### 5.2.5 SQLite データ要件
+
+既定の保存先は `output/memory/conversation-memory.sqlite3` です。`memory_items` には、`id`、`client_id`、`conversation_id`、`kind`、`memory_key`、`value`、`confidence`、`source`、`created_at`、`updated_at`、`expires_at`、`status` を保持します。
+
+- `UNIQUE(client_id, kind, memory_key)` により、回答言語などの同一設定は最新値へ Upsert する。
+- 有効記憶検索用に `client_id + status + expires_at` の Index を持つ。
+- 期限切れデータは Chat 処理時または `POST /api/memory/cleanup` で物理削除する。
+- SQLite は `.gitignore` 対象とし、リポジトリへ会話記憶を登録しない。
+
+#### 5.2.6 API・UI 要件
+
+| 操作 | API / UI | 動作 |
+|------|------|------|
+| Chat | `POST /api/chat` | `use_memory` を受け取り、Local JWT 有効時は `sub` を所有者として `sanitized_question` と `memory_usage` を返す |
+| 一覧 | `GET /api/memory?client_id=...` | 有効な preference / fact、信頼度、期限を返す |
+| 単一削除 | `DELETE /api/memory/items/{item_id}` | 本人が指定した記憶項目だけを削除する |
+| 会話単位削除 | `DELETE /api/memory?client_id=...&conversation_id=...` | 指定会話由来の記憶を削除する |
+| 全削除 | `DELETE /api/memory?client_id=...` | 指定クライアントの記憶を全削除する |
+| 期限切れ清掃 | `POST /api/memory/cleanup` | 期限切れ記憶を物理削除する |
+| Memory 画面 | ヘッダーの `Memory` ボタンと ON/OFF Toggle | 種別、値、信頼度、期限の確認、単一削除、全削除を提供する |
+
+`memory_usage` では、`context_items`、`stored_items`、`masked_pii`、`dropped_items` を返します。これにより、記憶が何件参照・更新され、どの PII がマスクされ、危険または不適切な候補が何件破棄されたかを確認できます。
+
+#### 5.2.7 モデル利用境界
+
+- ホワイトリスト化された言語・回答スタイル preference だけを形式指示へ変換する。
+- 任意の Fact は System Prompt に昇格させず、不信頼な補助情報として扱う。
+- 会話記憶と検索資料が矛盾する場合は検索資料を優先する。
+- Fact を金融規程、商品条件、融資・KYC・AML・取引停止等の判断根拠にしない。
+- 会話記憶には `[S#]` を割り当てず、Citation は検索資料だけに限定する。
+
+#### 5.2.8 P5 受入条件
+
+- PII と不要データが決定論的にクレンジングされ、元の値が記憶 DB に残らない。
+- preference と明示 Fact が別種別で保存される。
+- 通常会話、PII を含む候補、Memory Poisoning は長期 Fact として保存されない。
+- 同じ preference は競合行を増やさず最新値へ更新される。
+- TTL、最大参照件数、期限切れ清掃が動作する。
+- 同一 `client_id` の別会話で有効記憶を参照できる。
+- Memory ON/OFF、記憶一覧、単一・会話単位・全件削除が動作する。
+- 記憶を利用しても金融ナレッジの根拠優先と Citation 制約が維持される。
+
+#### 5.2.9 本番化に向けた残要件
+
+ローカル PoC では `AUTH_MODE=local_jwt` の Token `sub` を記憶所有者として使用し、単一削除まで実装しています。ただし、Local JWT は Entra ID の代替となる本番認証ではなく、SQLite も未暗号化です。本番化では、Entra ID への置換、保存時暗号化、Key Vault、Azure RBAC、監査ログ、保持・削除証跡、本人による訂正、DLP、名前・自然言語住所を含む PII 検出強化が必要です。
+
+### 5.3 2026-07-14 の検証記録
 
 | 確認項目 | 結果 | 判断 |
 |------|------|------|
-| フロントエンド production build | TypeScript + Vite build 成功 | UI ソースはビルド可能 |
-| Backend root API test | 成功 | API 起動の基本確認は可能 |
-| Backend health test | 期待値に timestamp が追加されたため既存 assertion と不一致 | テスト更新が必要 |
-| Backend chat test | テスト環境の Azure endpoint に接続できず 500 | Azure 接続または Mock 切替が必要 |
+| フロントエンド | 4 件の Vitest と TypeScript + Vite production build が成功 | Memory、Feedback、API の主要操作と build を確認済み |
+| Backend 自動テスト | 59 件合格 | 認証、ACL、Memory、Feedback、Logging、Metrics を含む回帰確認済み |
+| 金融検索評価 | 88 / 88 合格、Hit@3 100% | 26 文書・142 Chunk の固定ローカル評価セットで検索・拒答回帰を確認済み |
+| 金融生成評価 | 22 / 22 合格、主要品質指標 100% | ローカル Gemma で Groundedness、Citation、数値根拠、拒答、安全入力を確認済み |
+| Bicep | Template validation 成功 | Azure 初期定義の構文・参照を確認済み |
+| Docker | Backend / Frontend image build、Compose 起動、Health check 成功 | ローカル配布形態を再現可能 |
 | 本番 Azure デプロイ | 未実施 | PoC の次フェーズで実施 |
 
 この記録は「システムが本番稼働済み」という証明ではなく、現時点の再現可能な状態と残課題を明示するためのものです。
@@ -181,6 +302,7 @@ PoC では最低限、次の評価セットを準備します。
 - Azure OpenAI と Azure AI Search を用いた RAG フロー設計・実装。
 - Markdown 文書の Chunk、Metadata、Embedding、Index 構築。
 - Hybrid Search、Query Rewrite、Score Threshold、Fallback、Citation の設計。
+- PII クレンジング、構造化会話記憶、TTL、ユーザー削除、モデル利用境界の設計・実装。
 - 現状アーキテクチャ、設計判断、既知課題、本番化アーキテクチャの文書化。
 - 認証、ネットワーク、監視、CI/CD、運用を含む本番化ロードマップ設計。
 
@@ -206,7 +328,8 @@ PoC では最低限、次の評価セットを準備します。
 | 質問補正 | Query Rewrite | 口語・曖昧表現を検索向け Query に変換 | LLM 呼出しによる遅延・コスト増 |
 | Chunk | Markdown 見出し単位 | 章の意味を保ち、引用元を説明しやすい | 表・長文・PDF には追加ルールが必要 |
 | 回答制御 | Score Threshold + Fallback | 根拠不足時の無理な回答を減らす | 閾値が高いと回答率が下がる |
-| 認証 | Local は Key、本番は Managed Identity | PoC の速度と本番の安全性を段階的に両立 | 移行時にコード・RBAC の変更が必要 |
+| 会話記憶 | 原文保存ではなくガバナンス適用済み preference / fact | PII、誤記憶、Memory Poisoning の影響を限定しやすい | 自由抽出より記憶対象の網羅率が低い |
+| 認証 | 利用者は Local JWT、本番は Entra ID。Azure サービス間は Managed Identity | Azure 不可期間も Role・所有権境界を検証できる | Entra ID / Azure RBAC との実接続検証が必要 |
 
 ---
 
@@ -563,7 +686,7 @@ flowchart TD
 ```mermaid
 flowchart LR
     subgraph Dev["開発環境"]
-        local["ローカル開発<br/>localhost:8000 + 5173<br/>API Key 認証"]
+        local["ローカル開発<br/>localhost:8000 + 5173<br/>Local JWT / 開発時は認証無効"]
     end
 
     subgraph CI["CI/CD"]
@@ -602,27 +725,29 @@ flowchart LR
 
 ---
 
-## 14. Demo → 本番化設計 対照表
+## 14. PoC → 本番化設計 対照表
 
-| 項目 | 現在の Demo | 本番化設計（未実装を含む） |
+| 項目 | 現在の PoC | 本番化設計（未実装を含む） |
 |------|-----------|----------|
 | **フロントエンドホスティング** | localhost:5173 (Vite dev) | Azure Static Web Apps + Front Door CDN |
 | **バックエンドホスティング** | localhost:8000 (Uvicorn) | Azure App Service (auto-scale) + API Management |
-| **認証** | なし | Microsoft Entra ID + MSAL + JWT |
+| **認証** | 任意の Local JWT（HS256）+ `user` / `operator` / `admin` | Microsoft Entra ID + MSAL + JWT |
 | **サービス間認証** | API Key (.env) | Managed Identity (キーレス) |
-| **セッション管理** | ブラウザ localStorage | Cosmos DB + Redis Cache |
-| **対話能力** | シングルターン質疑応答 | マルチターン対話 (コンテキスト記憶) |
+| **セッション管理** | ブラウザ localStorage + `conversation_id`。認証時は JWT `sub` で所有者を固定 | Entra ID と連携した Cosmos DB + Redis Cache |
+| **対話能力** | PII クレンジング済み preference / fact を SQLite から会話横断参照 | 認証ユーザー単位の暗号化記憶、監査、単一項目訂正 |
+| **記憶ガバナンス** | PII マスク、TTL、最大 12 件、Poisoning 除外、ON/OFF、単一・会話・全件削除 | DLP、暗号化、Azure RBAC、同意、保持・削除証跡 |
+| **文書アクセス制御** | JWT group + JSON Metadata によるローカル ACL Filter | Entra ID group + Azure AI Search Security Filter |
 | **コンテンツ安全性** | 基本キーワードマッチング | Azure AI Content Safety |
 | **レート制限** | なし | API Management + slowapi |
 | **ナレッジソース** | Markdown のみ | Markdown + PDF + Word |
 | **インデックス更新** | 手動 build_index.py | GitHub Actions 自動トリガー + Blue-Green デプロイ |
-| **ログ** | プレーンテキスト print | OpenTelemetry → Application Insights |
-| **監視** | なし | Dashboard + アラート + 週次レポート |
+| **ログ** | Request ID 付き JSON Log、Question / Body 非記録 | OpenTelemetry → Application Insights / Log Analytics |
+| **監視** | `/api/metrics`、Prometheus、任意の OTLP Collector / Grafana | Azure Monitor Dashboard + Alert + 週次レポート |
 | **ネットワークセキュリティ** | パブリックアクセス | VNet + Private Endpoint |
-| **CI/CD** | 手動デプロイ | GitHub Actions + Staging Slot + Swap |
+| **CI/CD** | GitHub Actions で Test / Build / Audit / Bicep / Secret Scan。Deploy は未実施 | GitHub Actions + Staging Slot + Swap |
 | **鍵管理** | .env ファイル | Azure Key Vault |
 | **検索強化** | Hybrid Search (RRF) | + Semantic Ranker |
-| **ユーザーフィードバック** | なし | 👍/👎 フィードバック → 品質分析クローズドループ |
+| **ユーザーフィードバック** | 👍/👎 と任意理由を PII 除去後に SQLite 保存 | Feedback 集計・評価データ化 → 品質分析クローズドループ |
 
 ---
 
@@ -685,7 +810,8 @@ flowchart LR
 | Prompt Injection | 基本パターンチェック | Content Safety、入力分離、Red Team Test |
 | 権限外文書の参照 | PoC データを限定 | Entra ID、RBAC、文書 ACL Filter |
 | API Key 漏えい | `.env` とリポジトリ除外 | Managed Identity、Key Vault、Rotation |
-| 個人情報・口座・取引情報 | PoC 対象外または匿名化した検証データのみ利用 | データ分類、DLP、Masking、保持・削除・監査ルール |
+| 個人情報・口座・取引情報 | PII マスキング後の質問だけを検索・生成へ渡し、PII を含む記憶候補を保存しない | データ分類、DLP、暗号化、保持・削除・監査ルール |
+| Memory Poisoning | 記憶候補をホワイトリスト抽出し、指示上書き・System Prompt 抽出表現を破棄 | Content Safety、Red Team Test、承認・訂正・監査フロー |
 | 高リスク業務判断の代替 | 融資・投資・本人確認・不正取引判断を対象外にする | Human Review、専門部署へのエスカレーション、利用規程 |
 | 古い文書の参照 | サンプル文書を手動管理 | Owner、版、有効期限、承認、Blue-Green Index |
 | AI 出力の誤利用 | AI 回答であることを明示 | 利用規程、Human Review、対外利用承認 |
@@ -716,20 +842,21 @@ flowchart LR
 
 | Phase | 目的 | 主な作業 | 完了条件 |
 |------|------|------|------|
-| Phase 0：現状 PoC | 技術フローの具体化 | UI、API、RAG、Index、Citation | ローカルで主要処理を説明できる |
+| Phase 0：現状 PoC | 技術フローと運用境界の具体化 | UI、API、RAG、Citation、Local JWT、ACL、Memory、Feedback、Metrics、Docker、CI | ローカルで主要処理・権限・品質回帰を再現できる |
 | Phase 1：接続検証 | Azure サービスで End-to-End 確認 | Azure OpenAI / AI Search 接続、評価データ、障害修正 | 代表質問で再現可能な評価結果がある |
-| Phase 2：パイロット | 限定部門で安全に試用 | Entra ID、ACL、ログ、UAT、教育 | 利用者・安全・運用の基準を満たす |
-| Phase 3：本番化 | 可用性・監査・保守を確立 | Private Endpoint、MI、監視、CI/CD、Runbook | リリース・運用承認を取得する |
+| Phase 2：パイロット | 限定部門で安全に試用 | Entra ID、Azure ACL、クラウド監視、UAT、教育 | 利用者・安全・運用の基準を満たす |
+| Phase 3：本番化 | 可用性・監査・保守を確立 | Private Endpoint、MI、Key Vault、Cloud CI/CD、Runbook | リリース・運用承認を取得する |
 | Phase 4：横展開 | 対象部門・データを段階拡大 | Source 追加、KPI 改善、コスト最適化 | 各部門の Owner と効果測定が定着する |
 
 ### 次フェーズの優先 Backlog
 
-1. Backend API test を現在のレスポンス仕様に合わせ、Azure 非接続時の Mock test を分離する。
-2. 金融業務部門・コンプライアンス部門と代表質問、期待回答、拒答条件から評価データセットを作成する。
-3. 実 Azure OpenAI / AI Search 環境で End-to-End 検証を行う。
-4. Entra ID 認証と文書単位 ACL Filter を実装する。
-5. Application Insights と構造化ログを導入する。
-6. ナレッジ更新の承認・Version・Rollback 手順を実装する。
+1. 金融業務部門・コンプライアンス部門と、未見の代表質問、期待回答、拒答条件、部門別アクセス条件を確定する。
+2. 実 Azure OpenAI / AI Search 環境で End-to-End、Score Threshold、障害時動作を検証する。
+3. Local JWT を Entra ID / MSAL に置き換え、Entra group と Azure AI Search ACL を結合する。
+4. Managed Identity、Key Vault、Private Endpoint、保存時暗号化を構築・審査する。
+5. 既存の JSON Log / Metrics / OpenTelemetry を Application Insights、Log Analytics、Alert に接続する。
+6. ナレッジ更新の承認・Version・Rollback と Blue-Green Index 手順を実装する。
+7. Azure Deployment Slot、Runbook、Backup / Restore、負荷・コスト試験、限定部門 UAT を実施する。
 
 ---
 
@@ -740,8 +867,8 @@ flowchart LR
 > 本ケースは、金融機関におけるナレッジ管理の高度化を目的とした、RAG 型オンライン質疑応答システムの開発です。商品・サービス規定、事務手順、社内 FAQ、内部ガイドライン、障害対応資料などを対象に、根拠付きで回答する仕組みを設計しました。
 > 現場の課題は、文書が分散して検索に時間がかかること、担当者によって回答品質が変わること、金融業務で必要となる回答根拠、情報の鮮度、アクセス権、監査性を確保しにくいことです。
 > 技術的には React と FastAPI を基盤にし、Azure OpenAI で質問の書き換え、Embedding、回答生成を行い、Azure AI Search でキーワード検索とベクトル検索を組み合わせています。回答には引用元を付け、根拠が弱い場合は無理に回答しない設計です。
-> 現在はローカル優先の PoC として、画面、API、RAG フロー、汎用サンプル Markdown の Index 構築まで実装しています。一方、金融業務文書による評価、Entra ID、文書権限、閉域化、監視、CI/CD は次段階または本番化設計として整理し、実装済みとは区別しています。
-> 次の段階では、お客様が承認した金融業務文書と代表質問で回答品質、拒答、セキュリティを評価し、認証・権限・運用を追加したうえで、限定部門の UAT に進む想定です。
+> 現在はローカル優先の PoC として、画面、API、金融ナレッジ検索、ローカル LLM、引用検証、ガバナンス適用済み会話記憶に加え、Local JWT、Role、文書 ACL、回答フィードバック、構造化ログ、Metrics、Docker、CI まで実装しています。
+> 次の段階では、実 Azure 接続、お客様が承認した未見質問による評価、Entra ID・Azure ACL・閉域化・暗号化・クラウド監視を検証し、限定部門の UAT に進む想定です。
 
 ### 19.2 10 分説明の順序
 
@@ -751,7 +878,7 @@ flowchart LR
 4. **利用イメージ**：質問から検索、回答、引用確認、Feedback まで。
 5. **技術構成**：Frontend、FastAPI、Azure OpenAI、AI Search、Index Pipeline。
 6. **技術判断**：Classic RAG、Hybrid Search、Query Rewrite、Fallback。
-7. **現在地**：実装済み、一部実装、本番化設計を区別。
+7. **現状**：実装済み、一部実装、本番化設計を区別。
 8. **評価**：正答率だけでなく、根拠、拒答、安全、業務時間を確認。
 9. **本番化**：認証、権限、監視、閉域化、運用体制。
 10. **次の合意**：対象部門、代表質問、文書、KPI、責任者。
@@ -792,7 +919,11 @@ PoC では顧客の個人情報、口座情報、取引明細、認証情報を�
 
 ### Q6. PoC から本番まで何が残っていますか。
 
-実 Azure 環境での品質評価、認証・認可、セキュリティ審査、監視、CI/CD、運用手順、ユーザー教育、UAT が残っています。PoC の技術デモをそのまま本番に移すのではなく、段階的に非機能要件を追加します。
+実 Azure 環境での OpenAI / AI Search 品質評価、Entra ID・Azure RBAC、Managed Identity、Key Vault、Private Endpoint、クラウド監視・デプロイ、セキュリティ審査、運用手順、ユーザー教育、UAT が残っています。Local JWT、ACL、構造化ログ、Metrics、Feedback、CI は本番方式へ移行するための検証済み骨格であり、Azure 上での完了を意味しません。
+
+### Q7. 会話内容はすべて記憶されますか。
+
+記憶されません。サーバー側には会話全文やモデル回答を保存せず、PII クレンジング後に明示的な回答言語・詳しさの preference と「覚えておいて」と指定された低リスク Fact だけを構造化して保存します。Memory は画面で停止でき、内容を確認して単一・会話単位・全件で削除できます。Local JWT 有効時は Token の `sub` が所有者になりますが、SQLite は未暗号化のため、本番では Entra ID、暗号化、Azure RBAC、監査が必要です。
 
 ---
 
@@ -800,15 +931,26 @@ PoC では顧客の個人情報、口座情報、取引明細、認証情報を�
 
 | 成果物 | パス | 説明 |
 |------|------|------|
-| Chat UI | `frontend/src/App.tsx` | 会話、引用、履歴、デバッグ表示 |
-| API | `backend/app/api/routes.py` | Chat、Health、Search、Index の入口 |
+| Chat UI | `frontend/src/App.tsx` | 会話、引用、履歴、Memory 制御、Feedback、レスポンシブ表示 |
+| API | `backend/app/api/routes.py` | Chat、Health、Memory、Feedback、Metrics、Search、Index の入口 |
+| Local 認証 | `backend/app/services/auth_service.py` | HS256 JWT、Role、Group、API 権限境界 |
+| 文書 ACL | `backend/app/services/local_search_service.py` | Group によるローカル文書 Filter |
+| 会話記憶サービス | `backend/app/services/conversation_memory_service.py` | PII クレンジング、分類、TTL、SQLite、参照・削除 |
+| 会話記憶モデル | `backend/app/models/memory.py` | Memory API のデータモデル |
+| P5 設計書 | `docs/conversation-memory-governance.md` | 会話記憶の保存境界、モデル利用境界、本番化課題 |
+| P5 テスト | `backend/tests/test_conversation_memory.py` | PII、分類、Poisoning、TTL、Upsert、削除の回帰試験 |
+| Feedback | `backend/app/services/feedback_service.py` | PII 除去済み回答評価の SQLite 保存 |
+| Observability | `backend/app/services/logging_service.py`、`observability_service.py`、`telemetry_service.py` | JSON Log、Metrics、OpenTelemetry |
 | RAG Orchestrator | `backend/app/services/rag_service.py` | Rewrite、Search、Fallback、回答生成の制御 |
 | Azure OpenAI | `backend/app/services/openai_service.py` | Query Rewrite、Embedding、Generation |
 | Azure AI Search | `backend/app/services/search_service.py` | Index、Upload、Hybrid Search |
-| Chunking | `backend/app/services/chunking_service.py` | Markdown の見出し単位分割 |
+| Chunking | `backend/app/services/chunking_service.py` | Markdown の見出し・自然境界分割、長文 Overlap、安定 ID |
 | Index Builder | `backend/scripts/build_index.py` | Knowledge 文書の Index 構築 |
-| Knowledge Sample | `docs/knowledge/` | RAG 技術検証用の汎用業務サンプル。金融機関の実データは含まない |
+| Knowledge Sample | `docs/knowledge-finance/` | 金融検索評価用の匿名・架空サンプルと文書 ACL。金融機関の実データは含まない |
 | IaC | `infra/bicep/main.bicep` | App Service を中心とした Azure 初期定義 |
+| Local 配布 | `docker-compose.yml` | Backend / Frontend と任意の監視 Stack |
+| CI | `.github/workflows/ci.yml` | Test、Build、Dependency Audit、Bicep、Secret Scan |
+| 一括検証 | `scripts/verify.ps1` | Backend、検索評価、Frontend、Bicep の再現確認 |
 | 現状設計 | `docs/current-system-architecture.md` | 現在コードに基づくアーキテクチャ |
 | 設計判断 | `docs/design-decisions.md` | RAG、Search、Chunk、認証等の判断記録 |
 | 既知課題 | `docs/known-issues.md` | 未実装機能と本番化の対応方針 |

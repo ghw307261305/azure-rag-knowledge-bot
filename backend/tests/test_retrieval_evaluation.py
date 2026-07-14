@@ -22,7 +22,7 @@ def test_finance_retrieval_quality_gates() -> None:
     )
     summary = report["summary"]
 
-    assert summary["total_cases"] == 60
+    assert summary["total_cases"] == 88
     assert summary["hit_at_3"] >= 0.90
     assert summary["fallback_accuracy"] >= 0.95
     assert summary["answerability_accuracy"] >= 0.95

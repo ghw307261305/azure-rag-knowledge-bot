@@ -1,12 +1,24 @@
 import os
+import logging
+import time
+import uuid
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes import router
-from app.services.config import get_settings
+from app.services.config import get_settings, validate_settings
+from app.services.logging_service import (
+    configure_logging,
+    reset_request_id,
+    set_request_id,
+)
+from app.services.telemetry_service import configure_telemetry
 
 settings = get_settings()
+validate_settings(settings)
+configure_logging(level=settings.log_level, json_logs=settings.json_logs)
+logger = logging.getLogger(__name__)
 
 app = FastAPI(title="Azure RAG Knowledge Bot API")
 
@@ -28,7 +40,33 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
+@app.middleware("http")
+async def request_context(request, call_next):
+    request_id = request.headers.get("X-Request-ID", "").strip() or str(uuid.uuid4())
+    token = set_request_id(request_id[:128])
+    started_at = time.perf_counter()
+    status_code = 500
+    try:
+        response = await call_next(request)
+        status_code = response.status_code
+        response.headers["X-Request-ID"] = request_id[:128]
+        return response
+    finally:
+        logger.info(
+            "HTTP request completed",
+            extra={
+                "event": "http_request",
+                "method": request.method,
+                "path": request.url.path,
+                "status_code": status_code,
+                "latency_ms": round((time.perf_counter() - started_at) * 1000, 3),
+            },
+        )
+        reset_request_id(token)
+
 app.include_router(router)
+configure_telemetry(app, settings)
 
 
 @app.get("/")
