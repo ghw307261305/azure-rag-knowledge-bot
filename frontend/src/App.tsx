@@ -610,6 +610,14 @@ export default function App() {
                               ? `参照 ${msg.memory_usage.context_items} / 保存 ${msg.memory_usage.stored_items} / 破棄 ${msg.memory_usage.dropped_items}`
                               : "未使用"}
                           </dd>
+                          <dt>会話摘要</dt>
+                          <dd>
+                            {msg.memory_usage?.summary_used
+                              ? "検索質問の補完に使用"
+                              : msg.memory_usage?.summary_stored
+                                ? "今回のトピックを更新"
+                                : "未使用"}
+                          </dd>
                           <dt>PII マスク</dt>
                           <dd>{msg.memory_usage?.masked_pii.join(", ") || "なし"}</dd>
                           <dt>生成コンテキスト</dt>
@@ -772,7 +780,7 @@ export default function App() {
             <div className="memory-dialog-header">
               <div>
                 <h2>会話記憶</h2>
-                <p>PII 清洗後の preference と明示的 fact のみ保存します。</p>
+                <p>PII 清洗後の preference、明示的 fact、短期会話摘要を保存します。</p>
               </div>
               <button type="button" className="memory-close" onClick={() => setShowMemory(false)}>×</button>
             </div>

@@ -14,6 +14,7 @@ Azure OpenAI と Azure AI Search を利用する RAG チャットボット PoC �
 - 生成結果の引用番号を検証し、Ollama 停止・空回答・不正引用時は検索原文へ安全に回退
 - P4 の生成評価セットは 22 問で、Groundedness、Citation、数値根拠、拒答、Prompt Injection を自動評価
 - P5 では会話記憶を PII 清洗し、preference / fact、信頼度、TTL を分離してローカル SQLite に保存
+- 同一会話の脱敏済みトピックを短期摘要として保持し、「刚才那个规定」「それ」などの指代質問だけ検索クエリを補完
 - Memory 画面と API から記憶の確認、会話単位削除、全削除が可能
 - 質問単位の記憶 ON/OFF、単一記憶削除、認証ユーザー所有権を実装
 - Azure 非依存の短期 JWT、user / operator / admin、金融文書 ACL Filter を実装
@@ -187,7 +188,7 @@ cd backend
 
 ### 会話記憶ガバナンス
 
-ブラウザは匿名 `client_id` と会話 ID を API に送り、バックエンドは質問を清洗してから Gemma と記憶層へ渡します。記憶には明示的 preference / fact だけを保存し、PII、Prompt Injection、原始会話全文は保存しません。詳細は [`docs/conversation-memory-governance.md`](docs/conversation-memory-governance.md) を参照してください。
+ブラウザは匿名 `client_id` と会話 ID を API に送り、バックエンドは質問を清洗してから Gemma と記憶層へ渡します。長期記憶は明示的 preference / fact に限定し、短期記憶は同一会話の脱敏済みトピック摘要だけを保存します。PII、Prompt Injection、原始会話全文、モデル回答は保存しません。指代式の追問だけ直近トピックで検索質問を補完します。詳細は [`docs/conversation-memory-governance.md`](docs/conversation-memory-governance.md) を参照してください。
 
 画面の `Memory ON / OFF` で質問単位の記憶利用を停止でき、Memory 画面から単一項目または全項目を削除できます。
 

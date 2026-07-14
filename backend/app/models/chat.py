@@ -54,6 +54,12 @@ class MemoryUsage(BaseModel):
         default_factory=lambda: [], description="マスクした PII 種別"
     )
     dropped_items: int = Field(0, description="品質または安全理由で保存しなかった件数")
+    summary_used: bool = Field(
+        False, description="会話摘要を使って今回の検索質問を補完したか"
+    )
+    summary_stored: bool = Field(
+        False, description="今回の質問で短期会話摘要を更新したか"
+    )
 
 
 class GenerationMetrics(BaseModel):

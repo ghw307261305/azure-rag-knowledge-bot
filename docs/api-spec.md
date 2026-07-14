@@ -85,7 +85,9 @@ API の起動確認用です。
     "context_items": 2,
     "stored_items": 0,
     "masked_pii": [],
-    "dropped_items": 0
+    "dropped_items": 0,
+    "summary_used": true,
+    "summary_stored": true
   },
   "generation_metrics": {
     "context_chunks": 3,
@@ -106,11 +108,13 @@ API の起動確認用です。
 
 `client_id` と `conversation_id` は任意です。両方があり、`use_memory=true` の場合だけ会話記憶を保存・参照します。認証時は Token の `sub` を所有者として使用し、送信された `client_id` で他ユーザーの記憶へアクセスできません。質問は PII 清洗後に検索と生成へ渡され、清洗結果を `sanitized_question` で返します。
 
+同一会話では脱敏済みの最近トピックを短期摘要として保存します。「刚才那个规定」「それ」「what about」のような追問では `summary_used=true` となり、摘要を含む補完済み検索質問が `rewritten_query` に反映されます。普通の独立質問では旧摘要を検索に使わず、現在トピックをリセットします。`summary_stored` は今回の質問で摘要を更新したかを示します。
+
 `generation_metrics` は `local_llm` の生成工程を分解した値です。Ollama が返す nanosecond 指標を ms に変換し、モデルロード、Prompt 評価、Token 生成を個別表示します。回退時は `fallback_reason` に `insufficient_retrieval`、`ollama_unavailable`、`invalid_model_response`、`generation_error` のいずれかが入ります。小型モデルが一文だけで終了し、検索原文から不足条件を決定論的に追加した場合は `evidence_completion_used=true` になります。
 
 ## GET /api/memory
 
-`client_id` に紐づく、有効期限内の治理済み記憶を返します。返却項目には `kind`、`key`、マスク済み `value`、`confidence`、`expires_at` が含まれます。
+`client_id` に紐づく、有効期限内の治理済み記憶を返します。返却項目には `kind`、`key`、マスク済み `value`、`confidence`、`expires_at` が含まれます。`kind=summary` は会話単位の短期トピック摘要です。
 
 ```text
 GET /api/memory?client_id=browser-550e8400-e29b-41d4-a716-446655440000

@@ -24,6 +24,8 @@ export interface MemoryUsage {
   stored_items: number;
   masked_pii: string[];
   dropped_items: number;
+  summary_used: boolean;
+  summary_stored: boolean;
 }
 
 export interface GenerationMetrics {
@@ -43,10 +45,10 @@ export interface GenerationMetrics {
 }
 
 export interface MemoryItem {
-  // kind はバックエンドで保存を許可している二種類だけに限定する。
+  // 長期 preference/fact と、会話単位の短期 summary だけを表示する。
   id: string;
   conversation_id: string;
-  kind: "preference" | "fact";
+  kind: "preference" | "fact" | "summary";
   key: string;
   value: string;
   confidence: number;

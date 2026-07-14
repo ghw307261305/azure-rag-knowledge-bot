@@ -77,9 +77,16 @@ def chat(
             raise HTTPException(status_code=400, detail="有効な質問がありません")
         # ファクトリが mock/local/local_llm/azure の差を吸収する。
         response = get_rag_service().answer(
-            preparation.sanitized_question,
+            preparation.effective_question,
             memory_context=preparation.memory_context,
             access_groups=principal.access_groups,
+        )
+        summary_stored = memory_service.remember_turn(
+            client_id=effective_client_id,
+            conversation_id=request.conversation_id,
+            question=preparation.sanitized_question,
+            follow_up_detected=preparation.follow_up_detected,
+            enabled_for_request=request.use_memory,
         )
         response.sanitized_question = preparation.sanitized_question
         response.request_id = get_request_id()
@@ -94,6 +101,8 @@ def chat(
             stored_items=preparation.stored_items,
             masked_pii=list(preparation.masked_pii),
             dropped_items=preparation.dropped_items,
+            summary_used=preparation.summary_used,
+            summary_stored=summary_stored,
         )
         get_observability_service().record(response)
         return response

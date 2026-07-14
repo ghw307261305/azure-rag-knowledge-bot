@@ -139,3 +139,98 @@ def test_memory_service_can_disable_one_request_and_delete_one_item(tmp_path) ->
     assert service.delete_item("different-client", items[0].id) == 0
     assert service.delete_item("client-004", items[0].id) == 1
     assert len(service.list_items("client-004")) == 1
+
+
+def test_controlled_summary_expands_follow_up_and_resets_for_new_topic(tmp_path) -> None:
+    service = _service(tmp_path, summary_ttl_days=7, summary_max_turns=3)
+
+    first = service.prepare(
+        client_id="client-summary-001",
+        conversation_id="conversation-summary-001",
+        question="SFB ダイレクトの振込限度額を教えてください",
+    )
+    assert first.effective_question == first.sanitized_question
+    assert first.summary_used is False
+    assert service.remember_turn(
+        client_id="client-summary-001",
+        conversation_id="conversation-summary-001",
+        question=first.sanitized_question,
+        follow_up_detected=first.follow_up_detected,
+    ) is True
+
+    follow_up = service.prepare(
+        client_id="client-summary-001",
+        conversation_id="conversation-summary-001",
+        question="刚才那个规定的例外是什么？",
+    )
+    assert follow_up.summary_used is True
+    assert "SFB ダイレクトの振込限度額" in follow_up.effective_question
+    assert "刚才那个规定" in follow_up.effective_question
+    assert service.remember_turn(
+        client_id="client-summary-001",
+        conversation_id="conversation-summary-001",
+        question=follow_up.sanitized_question,
+        follow_up_detected=follow_up.follow_up_detected,
+    ) is True
+
+    summaries = [
+        item
+        for item in service.list_items("client-summary-001")
+        if item.kind == "summary"
+    ]
+    assert len(summaries) == 1
+    assert "振込限度額" in summaries[0].value
+    assert "刚才那个规定" in summaries[0].value
+
+    new_topic = service.prepare(
+        client_id="client-summary-001",
+        conversation_id="conversation-summary-001",
+        question="法人口座の開設書類を教えてください",
+    )
+    assert new_topic.summary_used is False
+    assert service.remember_turn(
+        client_id="client-summary-001",
+        conversation_id="conversation-summary-001",
+        question=new_topic.sanitized_question,
+        follow_up_detected=new_topic.follow_up_detected,
+    ) is True
+
+    new_follow_up = service.prepare(
+        client_id="client-summary-001",
+        conversation_id="conversation-summary-001",
+        question="それは何部必要ですか？",
+    )
+    assert new_follow_up.summary_used is True
+    assert "法人口座の開設書類" in new_follow_up.effective_question
+    assert "振込限度額" not in new_follow_up.effective_question
+
+
+def test_controlled_summary_honors_off_pii_and_deletion(tmp_path) -> None:
+    service = _service(tmp_path)
+
+    assert service.remember_turn(
+        client_id="client-summary-002",
+        conversation_id="conversation-summary-002",
+        question="振込限度額を教えてください",
+        follow_up_detected=False,
+        enabled_for_request=False,
+    ) is False
+    assert service.remember_turn(
+        client_id="client-summary-002",
+        conversation_id="conversation-summary-002",
+        question="連絡先は [EMAIL] です",
+        follow_up_detected=False,
+    ) is False
+    assert service.list_items("client-summary-002") == []
+
+    assert service.remember_turn(
+        client_id="client-summary-002",
+        conversation_id="conversation-summary-002",
+        question="振込限度額を教えてください",
+        follow_up_detected=False,
+    ) is True
+    summary = service.list_items("client-summary-002")[0]
+    assert summary.kind == "summary"
+    assert service.delete_item("different-client", summary.id) == 0
+    assert service.delete_item("client-summary-002", summary.id) == 1
+    assert service.list_items("client-summary-002") == []

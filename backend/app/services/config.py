@@ -49,6 +49,8 @@ class Settings:
     memory_db_path: str
     memory_preference_ttl_days: int
     memory_fact_ttl_days: int
+    memory_summary_ttl_days: int
+    memory_summary_max_turns: int
     memory_max_items: int
     feedback_db_path: str
     json_logs: bool
@@ -155,6 +157,12 @@ def get_settings() -> Settings:
             os.getenv("MEMORY_PREFERENCE_TTL_DAYS", "90")
         ),
         memory_fact_ttl_days=int(os.getenv("MEMORY_FACT_TTL_DAYS", "30")),
+        memory_summary_ttl_days=int(
+            os.getenv("MEMORY_SUMMARY_TTL_DAYS", "7")
+        ),
+        memory_summary_max_turns=int(
+            os.getenv("MEMORY_SUMMARY_MAX_TURNS", "3")
+        ),
         memory_max_items=int(os.getenv("MEMORY_MAX_ITEMS", "12")),
         feedback_db_path=os.getenv(
             "FEEDBACK_DB_PATH", "output/feedback/feedback.sqlite3"

@@ -369,6 +369,51 @@ def test_memory_can_be_disabled_per_request_and_deleted_by_item(monkeypatch) -> 
     assert client.get("/api/memory", params={"client_id": client_id}).json()["total"] == 0
 
 
+def test_chat_uses_controlled_summary_for_contextual_follow_up(monkeypatch) -> None:
+    _select_rag_mode(monkeypatch, "mock")
+    client_id = "client-summary-api-001"
+    conversation_id = "conversation-summary-api-001"
+
+    first = client.post(
+        "/api/chat",
+        json={
+            "question": "SFB ダイレクトの振込限度額を教えてください",
+            "client_id": client_id,
+            "conversation_id": conversation_id,
+        },
+    )
+    assert first.status_code == 200
+    assert first.json()["memory_usage"]["summary_stored"] is True
+    assert first.json()["memory_usage"]["summary_used"] is False
+
+    follow_up = client.post(
+        "/api/chat",
+        json={
+            "question": "刚才那个规定的例外是什么？",
+            "client_id": client_id,
+            "conversation_id": conversation_id,
+        },
+    )
+    body = follow_up.json()
+    assert follow_up.status_code == 200
+    assert body["memory_usage"]["summary_used"] is True
+    assert "SFB ダイレクトの振込限度額" in body["rewritten_query"]
+    assert "刚才那个规定" in body["rewritten_query"]
+    assert body["sanitized_question"] == "刚才那个规定的例外是什么?"
+
+    memory = client.get("/api/memory", params={"client_id": client_id}).json()
+    summary_items = [item for item in memory["items"] if item["kind"] == "summary"]
+    assert len(summary_items) == 1
+    assert "振込限度額" in summary_items[0]["value"]
+
+    deleted = client.delete(
+        "/api/memory",
+        params={"client_id": client_id, "conversation_id": conversation_id},
+    )
+    assert deleted.json()["deleted"] == 1
+    assert client.get("/api/memory", params={"client_id": client_id}).json()["total"] == 0
+
+
 def test_feedback_accepts_sanitized_reason(monkeypatch) -> None:
     _select_rag_mode(monkeypatch, "mock")
     chat_response = client.post(
