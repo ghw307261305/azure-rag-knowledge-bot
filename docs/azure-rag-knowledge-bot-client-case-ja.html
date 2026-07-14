@@ -393,8 +393,10 @@
             <h3 id="1-2">1.2 顧客に伝える結論</h3>
             <p>本システムは AI に最終判断を任せるものではありません。利用者が社内資料を早く見つけ、根拠を確認し、回答や調査の初稿を作るための支援基盤です。</p>
             <ul>
-                <li><strong>PoC で確認すること</strong>：技術的に回答できるか、検索結果に根拠があるか、対象業務で時間短縮につながるか。ローカル環境では JWT 認証、役割制御、文書 ACL、構造化ログ、メトリクス、フィードバック、CI まで技術検証済みです。</li>
-                <li><strong>本番化で追加・検証すること</strong>：Entra ID、Azure RBAC、Managed Identity、Key Vault、閉域化、クラウド監視、デプロイ自動化、セキュリティ審査、実ユーザー UAT。</li>
+                <li><strong>PoC で確認すること</strong>：技術的に回答できるか、検索結果に根拠があるか、対象業務で時間短縮につながるか。ローカル環境では JWT 認証、役割制御、文書
+                    ACL、構造化ログ、メトリクス、フィードバック、CI まで技術検証済みです。</li>
+                <li><strong>本番化で追加・検証すること</strong>：Entra ID、Azure RBAC、Managed Identity、Key
+                    Vault、閉域化、クラウド監視、デプロイ自動化、セキュリティ審査、実ユーザー UAT。</li>
                 <li><strong>人が担うこと</strong>：顧客対応、融資・審査、投資判断、本人確認、マネー・ローンダリング対策、取引・支払などの最終確認と承認。</li>
             </ul>
             <hr>
@@ -646,7 +648,8 @@
                         </tr>
                         <tr>
                             <td>認証・認可</td>
-                            <td>HS256 Local JWT、<code>user</code> / <code>operator</code> / <code>admin</code>、管理 API の Role 制御、記憶所有者の <code>sub</code> 固定</td>
+                            <td>HS256 Local JWT、<code>user</code> / <code>operator</code> / <code>admin</code>、管理 API の
+                                Role 制御、記憶所有者の <code>sub</code> 固定</td>
                             <td><strong>実装済み</strong></td>
                         </tr>
                         <tr>
@@ -689,8 +692,10 @@
             </div>
             <h3 id="local-poc-chatbot-answer">回答画面（ローカル PoC）</h3>
             <figure class="screenshot">
-                <img src="assets/chatbot-answer-page-local-llm.png" alt="金融ナレッジ Chatbot の回答画面。50 万円の他行振込について、手数料 275 円、当日扱い 15 時、引用資料、ローカルモデル名を表示" loading="lazy">
-                <figcaption>図 1. ローカル金融ナレッジを検索し、<code>gemma3:4b-it-qat</code> が手数料、当日扱いの締切、注意事項を根拠番号付きで生成した Chatbot 画面。<code>local_llm</code>、モデル名、引用資料、フィードバック導線を同一画面で確認できます。</figcaption>
+                <img src="assets/chatbot-answer-page-local-llm.png"
+                    alt="金融ナレッジ Chatbot の回答画面。50 万円の他行振込について、手数料 275 円、当日扱い 15 時、引用資料、ローカルモデル名を表示" loading="lazy">
+                <figcaption>図 1. ローカル金融ナレッジを検索し、<code>gemma3:4b-it-qat</code> が手数料、当日扱いの締切、注意事項を根拠番号付きで生成した Chatbot
+                    画面。<code>local_llm</code>、モデル名、引用資料、フィードバック導線を同一画面で確認できます。</figcaption>
             </figure>
             <h3 id="5-2-p5">5.2 P5：会話記憶ガバナンスの設計要件（実装済み）</h3>
             <h4 id="5-2-1">5.2.1 目的と設計方針</h4>
@@ -719,7 +724,8 @@
                         <tr>
                             <td>MEM-01</td>
                             <td>利用者・会話識別</td>
-                            <td>Local JWT 有効時は Token の <code>sub</code> を所有者とし、開発用の認証無効時だけブラウザ <code>client_id</code> を使用する</td>
+                            <td>Local JWT 有効時は Token の <code>sub</code> を所有者とし、開発用の認証無効時だけブラウザ <code>client_id</code>
+                                を使用する</td>
                             <td>クライアント指定による他利用者の記憶参照を防ぎつつ、同一利用者の別会話で再利用できる</td>
                         </tr>
                         <tr>
@@ -825,7 +831,7 @@
                     <tbody>
                         <tr>
                             <td><code>preference / response_language</code></td>
-                            <td>中国語（内部値：中文）、日本語、英語</td>
+                            <td>日本語、英語</td>
                             <td>0.90</td>
                             <td>90 日</td>
                             <td>回答言語だけを調整</td>
@@ -873,7 +879,9 @@
                         <tr>
                             <td>Chat</td>
                             <td><code>POST /api/chat</code></td>
-                            <td><code>use_memory</code> を受け取り、Local JWT 有効時は <code>sub</code> を所有者として <code>sanitized_question</code> と <code>memory_usage</code> を返す</td>
+                            <td><code>use_memory</code> を受け取り、Local JWT 有効時は <code>sub</code> を所有者として
+                                <code>sanitized_question</code> と <code>memory_usage</code> を返す
+                            </td>
                         </tr>
                         <tr>
                             <td>一覧</td>
@@ -931,7 +939,9 @@
                 <li>記憶を利用しても金融ナレッジの根拠優先と Citation 制約が維持される。</li>
             </ul>
             <h4 id="5-2-9">5.2.9 本番化に向けた残要件</h4>
-            <p>ローカル PoC では <code>AUTH_MODE=local_jwt</code> の Token <code>sub</code> を記憶所有者として使用し、単一削除まで実装しています。ただし、Local JWT は Entra ID の代替となる本番認証ではなく、SQLite も未暗号化です。本番化では、Entra ID への置換、保存時暗号化、Key Vault、Azure RBAC、監査ログ、保持・削除証跡、本人による訂正、DLP、名前・自然言語住所を含む PII 検出強化が必要です。</p>
+            <p>ローカル PoC では <code>AUTH_MODE=local_jwt</code> の Token <code>sub</code>
+                を記憶所有者として使用し、単一削除まで実装しています。ただし、Local JWT は Entra ID の代替となる本番認証ではなく、SQLite も未暗号化です。本番化では、Entra ID
+                への置換、保存時暗号化、Key Vault、Azure RBAC、監査ログ、保持・削除証跡、本人による訂正、DLP、名前・自然言語住所を含む PII 検出強化が必要です。</p>
             <h3 id="5-3-2026-07-14">5.3 2026-07-14 の検証記録</h3>
             <div class="table-wrap">
                 <table>
@@ -1502,7 +1512,8 @@
                         </tr>
                         <tr>
                             <td><strong>認証</strong></td>
-                            <td>任意の Local JWT（HS256）+ <code>user</code> / <code>operator</code> / <code>admin</code></td>
+                            <td>任意の Local JWT（HS256）+ <code>user</code> / <code>operator</code> / <code>admin</code>
+                            </td>
                             <td>Microsoft Entra ID + MSAL + JWT</td>
                         </tr>
                         <tr>
@@ -1937,7 +1948,9 @@
             <blockquote>本ケースは、金融機関におけるナレッジ管理の高度化を目的とした、RAG 型オンライン質疑応答システムの開発です。商品・サービス規定、事務手順、社内
                 FAQ、内部ガイドライン、障害対応資料などを対象に、根拠付きで回答する仕組みを設計しました。<br>現場の課題は、文書が分散して検索に時間がかかること、担当者によって回答品質が変わること、金融業務で必要となる回答根拠、情報の鮮度、アクセス権、監査性を確保しにくいことです。<br>技術的には
                 React と FastAPI を基盤にし、Azure OpenAI で質問の書き換え、Embedding、回答生成を行い、Azure AI Search
-                でキーワード検索とベクトル検索を組み合わせています。回答には引用元を付け、根拠が弱い場合は無理に回答しない設計です。<br>現在はローカル優先の PoC として、画面、API、金融ナレッジ検索、ローカル LLM、引用検証、ガバナンス適用済み会話記憶に加え、Local JWT、Role、文書 ACL、回答フィードバック、構造化ログ、Metrics、Docker、CI まで実装しています。<br>次の段階では、実 Azure 接続、お客様が承認した未見質問による評価、Entra ID・Azure ACL・閉域化・暗号化・クラウド監視を検証し、限定部門の UAT に進む想定です。
+                でキーワード検索とベクトル検索を組み合わせています。回答には引用元を付け、根拠が弱い場合は無理に回答しない設計です。<br>現在はローカル優先の PoC として、画面、API、金融ナレッジ検索、ローカル
+                LLM、引用検証、ガバナンス適用済み会話記憶に加え、Local JWT、Role、文書 ACL、回答フィードバック、構造化ログ、Metrics、Docker、CI まで実装しています。<br>次の段階では、実
+                Azure 接続、お客様が承認した未見質問による評価、Entra ID・Azure ACL・閉域化・暗号化・クラウド監視を検証し、限定部門の UAT に進む想定です。
             </blockquote>
             <h3 id="19-2-10">19.2 10 分説明の順序</h3>
             <ol>
@@ -1978,9 +1991,13 @@
             <p>拡張可能ですが、現在の PoC の Index 対象は Markdown です。PDF / Word / SharePoint を追加する場合は、OCR、表抽出、版管理、ACL
                 継承、更新検知を個別に設計・検証します。</p>
             <h3 id="q6-poc">Q6. PoC から本番まで何が残っていますか。</h3>
-            <p>実 Azure 環境での OpenAI / AI Search 品質評価、Entra ID・Azure RBAC、Managed Identity、Key Vault、Private Endpoint、クラウド監視・デプロイ、セキュリティ審査、運用手順、ユーザー教育、UAT が残っています。Local JWT、ACL、構造化ログ、Metrics、Feedback、CI は本番方式へ移行するための検証済み骨格であり、Azure 上での完了を意味しません。</p>
+            <p>実 Azure 環境での OpenAI / AI Search 品質評価、Entra ID・Azure RBAC、Managed Identity、Key Vault、Private
+                Endpoint、クラウド監視・デプロイ、セキュリティ審査、運用手順、ユーザー教育、UAT が残っています。Local JWT、ACL、構造化ログ、Metrics、Feedback、CI
+                は本番方式へ移行するための検証済み骨格であり、Azure 上での完了を意味しません。</p>
             <h3 id="q7">Q7. 会話内容はすべて記憶されますか。</h3>
-            <p>記憶されません。サーバー側には会話全文やモデル回答を保存せず、PII クレンジング後に明示的な回答言語・詳しさの preference と「覚えておいて」と指定された低リスク Fact だけを構造化して保存します。Memory は画面で停止でき、内容を確認して単一・会話単位・全件で削除できます。Local JWT 有効時は Token の <code>sub</code> が所有者になりますが、SQLite は未暗号化のため、本番では Entra ID、暗号化、Azure RBAC、監査が必要です。</p>
+            <p>記憶されません。サーバー側には会話全文やモデル回答を保存せず、PII クレンジング後に明示的な回答言語・詳しさの preference と「覚えておいて」と指定された低リスク Fact
+                だけを構造化して保存します。Memory は画面で停止でき、内容を確認して単一・会話単位・全件で削除できます。Local JWT 有効時は Token の <code>sub</code>
+                が所有者になりますが、SQLite は未暗号化のため、本番では Entra ID、暗号化、Azure RBAC、監査が必要です。</p>
             <hr>
             <h2 id="21">21. ケースを裏付けるリポジトリ成果物</h2>
             <div class="table-wrap">
@@ -2040,7 +2057,8 @@
                         </tr>
                         <tr>
                             <td>Observability</td>
-                            <td><code>backend/app/services/logging_service.py</code>、<code>observability_service.py</code>、<code>telemetry_service.py</code></td>
+                            <td><code>backend/app/services/logging_service.py</code>、<code>observability_service.py</code>、<code>telemetry_service.py</code>
+                            </td>
                             <td>JSON Log、Metrics、OpenTelemetry</td>
                         </tr>
                         <tr>
